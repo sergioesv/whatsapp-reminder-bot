@@ -33,7 +33,7 @@ WhatsApp → Meta Webhook POST /webhook → server.js → gemini.js (intent) →
 | `src/sendMessage.js` | Meta WhatsApp Cloud API wrapper |
 | `public/index.html` | Landing page — **gitignored, owner-specific branding** |
 | `public/documentation.html` | Docs site — **gitignored, owner-specific** |
-| `public/status.html` | Manvi OS system dashboard — served at `/status` |
+| `public/status.html` | Manvi system dashboard — served at `/status` |
 | `public/styles.css` | Dashboard styles (IBM Plex Mono/Sans) |
 | `public/app.js` | Dashboard frontend — fetches `/api/status`, renders charts and metrics |
 | `test.js` | v1.0 integration test suite — run with `node test.js` from project root |
@@ -196,13 +196,19 @@ Handler: strips non-digits from `aiResult.phone`, validates >= 10 digits, upsert
 ```json
 {
   "success": true,
-  "version": "3.2.0",
+  "version": "1.0.0",
   "uptime": { "days": 0, "hours": 2, "minutes": 14, "seconds": 32 },
   "limits": { "gemini": 40, "groq": 3000, "openrouter": 50, "serper": 2500, "tavily": 1000 },
-  "stats": { "gemini": 5, "groq": 0, "openrouter": 0, "serper": 0, "tavily": 12,
-             "errorsToday": 0, "historyLabels": [], "historyData": [], "errorData": [],
-             "historyRaw": [], "daysTracked": 14 },
-  "jobs": [ { "name": "...", "schedule": "...", "description": "...", "status": "active|scheduled" } ]
+  "stats": { 
+    "gemini": 5, "groq": 0, "openrouter": 0, "serper": 0, "tavily": 12,
+    "tavilyToday": 12, "serperToday": 0,
+    "errorsToday": 0, 
+    "hourlySuccess": [0, 12, 5, ...], "hourlyErrors": [0, 0, 1, ...],
+    "historyLabels": [], "historyData": [], "errorData": [],
+    "allTimeStats": { "gemini": 150, "groq": 800, "openrouter": 12, "tavily": 45, "serper": 88 },
+    "daysTracked": 14 
+  },
+  "jobs": [ { "name": "...", "schedule": "...", "description": "...", "layman": "...", "status": "active|scheduled" } ]
 }
 ```
 

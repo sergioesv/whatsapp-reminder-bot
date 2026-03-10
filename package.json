@@ -1,6 +1,6 @@
 {
   "name": "manvi-whatsapp-assistant",
-  "version": "3.2.0",
+  "version": "1.0.0",
   "description": "Agentic WhatsApp assistant with 4-tier AI waterfall, live web search, and self-monitoring dashboard",
   "author": "Viswanath Bodasakurthi <viswanath@onemark.digital>",
   "license": "MIT",

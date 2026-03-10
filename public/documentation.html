@@ -3,10 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Documentation — Manvi</title>
+  
+  <title>Documentation | Manvi</title>
+  <meta name="description" content="Official documentation for Manvi. Learn how to self-host, configure, and use your personal AI WhatsApp assistant.">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Viswanath Bodasakurthi | OneMark">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://manvi.onrender.com/documentation">
+  <meta property="og:title" content="Documentation | Manvi">
+  <meta property="og:description" content="Official documentation for Manvi. Learn how to self-host, configure, and use your personal AI WhatsApp assistant.">
+  <meta property="og:image" content="https://manvi.onrender.com/preview-image.jpg">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Documentation | Manvi">
+  <meta name="twitter:description" content="Learn how to self-host and configure your Manvi instance.">
+  <meta name="twitter:image" content="https://manvi.onrender.com/preview-image.jpg">
+
+  <link rel="icon" type="image/png" href="/assets/favicon-onemark/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon-onemark/favicon.svg" />
+  <link rel="shortcut icon" href="/assets/favicon-onemark/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-onemark/apple-touch-icon.png" />
+  <link rel="manifest" href="/assets/favicon-onemark/site.webmanifest" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
-  <style>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet"><style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -815,7 +836,7 @@ Tell me a joke</code></pre>
           <tbody>
             <tr><td><code>GET</code></td><td><code>/</code></td><td>Landing page</td></tr>
             <tr><td><code>GET</code></td><td><code>/documentation</code></td><td>This documentation page</td></tr>
-            <tr><td><code>GET</code></td><td><code>/status</code></td><td>Manvi OS — live system dashboard</td></tr>
+            <tr><td><code>GET</code></td><td><code>/status</code></td><td>Manvi — live system dashboard</td></tr>
             <tr><td><code>GET</code></td><td><code>/api/ping</code></td><td>Keep-alive endpoint. Returns <code>{status, latency_ms, timestamp}</code></td></tr>
             <tr><td><code>GET</code></td><td><code>/api/status</code></td><td>Dashboard data — usage stats, uptime, limits, jobs, version</td></tr>
             <tr><td><code>GET</code></td><td><code>/webhook</code></td><td>Meta webhook verification handshake</td></tr>

@@ -3,11 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System Status — Manvi</title>
+  
+  <title>System Status | Manvi</title>
+  <meta name="description" content="Live system status, API usage quotas, and observability dashboard for Manvi.">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Viswanath Bodasakurthi | OneMark">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://manvi.onrender.com/status">
+  <meta property="og:title" content="System Status | Manvi">
+  <meta property="og:description" content="Live system status, API usage quotas, and observability dashboard for Manvi.">
+  <meta property="og:image" content="https://manvi.onrender.com/preview-image.jpg">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="System Status | Manvi">
+  <meta name="twitter:description" content="Live system status, API usage quotas, and observability dashboard for Manvi.">
+  <meta name="twitter:image" content="https://manvi.onrender.com/preview-image.jpg">
+
+  <link rel="icon" type="image/png" href="/assets/favicon-onemark/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon-onemark/favicon.svg" />
+  <link rel="shortcut icon" href="/assets/favicon-onemark/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-onemark/apple-touch-icon.png" />
+  <link rel="manifest" href="/assets/favicon-onemark/site.webmanifest" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -485,7 +506,6 @@
 </head>
 <body>
 
-  <!-- TOP NAV -->
   <nav class="top-nav">
     <a href="/" class="top-nav-logo">
       <span class="dot"></span>
@@ -506,7 +526,7 @@
   <div class="container">
 
     <header>
-      <div class="wordmark">MANVI <span>OS</span></div>
+      <div class="wordmark">MANVI <span>BOT</span></div>
       <div class="header-right">
         <span class="version" id="versionBadge">v—</span>
         <button id="themeToggle" class="theme-btn">Light</button>
@@ -525,6 +545,14 @@
         <span class="uptime-status" id="aiStatusText">—</span>
       </div>
     </section>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div class="section-label" style="margin-bottom: 0;">API Usage Quotas</div>
+      <div class="chart-toggle" style="display: flex; gap: 0.25rem; background: var(--bg-3); padding: 0.25rem; border-radius: 6px; border: 1px solid var(--border);">
+        <button id="btnTier24h" class="toggle-btn active" style="font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 4px; border: none; background: var(--bg-2); color: var(--text-1); cursor: pointer; font-weight: 600;">24H</button>
+        <button id="btnTierAll" class="toggle-btn" style="font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 4px; border: none; background: transparent; color: var(--text-2); cursor: pointer; font-weight: 600;">ALL TIME</button>
+      </div>
+    </div>
 
     <section class="metrics-grid">
       <div class="metric-card" id="card-gemini">
@@ -564,7 +592,13 @@
     </section>
 
     <section class="chart-section">
-      <div class="section-label">7-Day Request Volume</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div class="section-label" style="margin-bottom: 0;">Request Volume</div>
+        <div class="chart-toggle" style="display: flex; gap: 0.25rem; background: var(--bg-3); padding: 0.25rem; border-radius: 6px; border: 1px solid var(--border);">
+          <button id="btn24h" class="toggle-btn active" style="font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 4px; border: none; background: var(--bg-2); color: var(--text-1); cursor: pointer; font-weight: 600;">24H</button>
+          <button id="btn7d" class="toggle-btn" style="font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 4px; border: none; background: transparent; color: var(--text-2); cursor: pointer; font-weight: 600;">7D</button>
+        </div>
+      </div>
       <div class="chart-legend">
         <span class="legend-item blue">Successful Requests</span>
         <span class="legend-item rose">API Failures</span>

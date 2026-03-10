@@ -64,13 +64,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     statusDot.className = `status-dot ${hasErrors ? "" : "pulse"}`;
     statusText.textContent = hasErrors ? "Degraded" : "Operational";
 
-    // Uptime text
-    document.getElementById("uptimeText").textContent =
-      `Uptime: ${uptime.days}d ${uptime.hours}h ${uptime.minutes}m ${uptime.seconds}s`;
+    // Dynamic Uptime Counter
+    let { days, hours, minutes, seconds } = uptime;
+    let totalSeconds = (days * 86400) + (hours * 3600) + (minutes * 60) + seconds;
+    const uptimeEl = document.getElementById("uptimeText");
+
+    const updateUptimeDisplay = () => {
+      const d = Math.floor(totalSeconds / 86400);
+      const h = Math.floor((totalSeconds % 86400) / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+      uptimeEl.textContent = `Uptime: ${d}d ${h}h ${m}m ${s}s`;
+    };
+
+    updateUptimeDisplay(); 
+    setInterval(() => {
+      totalSeconds++;
+      updateUptimeDisplay();
+    }, 1000);
 
     // Sync time
-    document.getElementById("syncTime").textContent =
-      `Synced: ${new Date().toLocaleTimeString()}`;
+    document.getElementById("syncTime").textContent = `Synced: ${new Date().toLocaleTimeString()}`;
 
     // AI status label
     const aiStatusEl = document.getElementById("aiStatusText");
@@ -98,28 +112,85 @@ document.addEventListener("DOMContentLoaded", async () => {
       vizContainer.appendChild(block);
     });
 
-    // Metric limits
-    document.getElementById("geminiLimit").textContent = limits.gemini;
-    document.getElementById("groqLimit").textContent   = limits.groq;
-    document.getElementById("orLimit").textContent     = limits.openrouter;
-    document.getElementById("tavilyLimit").textContent = limits.tavily;
-    document.getElementById("serperLimit").textContent = limits.serper;
+   // --- API TIER TOGGLE LOGIC ---
+    const stats24H = {
+      gemini: stats.gemini, 
+      groq: stats.groq, 
+      openrouter: stats.openrouter, 
+      tavily: stats.tavilyToday, 
+      serper: stats.serperToday
+    };
+    
+    const statsAllTime = stats.allTimeStats || {
+      gemini: 0, groq: 0, openrouter: 0, tavily: 0, serper: 0
+    };
 
-    // Animated counters
-    animateCount(document.getElementById("geminiCount"), stats.gemini);
-    animateCount(document.getElementById("groqCount"),   stats.groq);
-    animateCount(document.getElementById("orCount"),     stats.openrouter);
-    animateCount(document.getElementById("tavilyCount"), stats.tavily);
-    animateCount(document.getElementById("serperCount"), stats.serper);
+    // Added an 'isAllTime' parameter to handle the UI swap
+    function updateMetricCards(dataObj, isAllTime = false) {
+      // 1. Update Numbers
+      animateCount(document.getElementById("geminiCount"), dataObj.gemini);
+      animateCount(document.getElementById("groqCount"),   dataObj.groq);
+      animateCount(document.getElementById("orCount"),     dataObj.openrouter);
+      animateCount(document.getElementById("tavilyCount"), dataObj.tavily);
+      animateCount(document.getElementById("serperCount"), dataObj.serper);
 
-    // Animated progress bars
-    animateBar(document.getElementById("geminiBar"), (stats.gemini / limits.gemini) * 100, 100);
-    animateBar(document.getElementById("groqBar"),   (stats.groq   / limits.groq)   * 100, 200);
-    animateBar(document.getElementById("orBar"),     (stats.openrouter / limits.openrouter) * 100, 300);
-    animateBar(document.getElementById("tavilyBar"), (stats.tavily / limits.tavily) * 100, 400);
-    animateBar(document.getElementById("serperBar"), (stats.serper / limits.serper) * 100, 500);
+      // 2. Update Limit Text (Serper is the only true lifetime cap)
+      document.getElementById("geminiLimit").textContent = isAllTime ? "∞" : limits.gemini;
+      document.getElementById("groqLimit").textContent   = isAllTime ? "∞" : limits.groq;
+      document.getElementById("orLimit").textContent     = isAllTime ? "∞" : limits.openrouter;
+      document.getElementById("tavilyLimit").textContent =  limits.tavily;
+      document.getElementById("serperLimit").textContent = limits.serper; 
 
-    // Chart
+      // 3. Update Progress Bars
+      const gemPct = isAllTime ? 100 : (dataObj.gemini / limits.gemini) * 100;
+      const groqPct = isAllTime ? 100 : (dataObj.groq / limits.groq) * 100;
+      const orPct = isAllTime ? 100 : (dataObj.openrouter / limits.openrouter) * 100;
+      const tavPct = isAllTime ? 100 : (dataObj.tavily / limits.tavily) * 100;
+      const serpPct = (dataObj.serper / limits.serper) * 100; // Serper calculation never changes
+
+      animateBar(document.getElementById("geminiBar"), gemPct, 0);
+      animateBar(document.getElementById("groqBar"), groqPct, 50);
+      animateBar(document.getElementById("orBar"), orPct, 100);
+      animateBar(document.getElementById("tavilyBar"), tavPct, 150);
+      animateBar(document.getElementById("serperBar"), serpPct, 200);
+    }
+
+    // Initialize the dashboard with the 24H view
+    updateMetricCards(stats24H, false);
+
+    // Button Click Listeners
+    const btnTier24h = document.getElementById("btnTier24h");
+    const btnTierAll = document.getElementById("btnTierAll");
+
+    if (btnTier24h && btnTierAll) {
+      btnTier24h.addEventListener("click", () => {
+        btnTier24h.style.background = "var(--bg-2)"; btnTier24h.style.color = "var(--text-1)";
+        btnTierAll.style.background = "transparent"; btnTierAll.style.color = "var(--text-2)";
+        updateMetricCards(stats24H, false);
+      });
+
+      btnTierAll.addEventListener("click", () => {
+        btnTierAll.style.background = "var(--bg-2)"; btnTierAll.style.color = "var(--text-1)";
+        btnTier24h.style.background = "transparent"; btnTier24h.style.color = "var(--text-2)";
+        updateMetricCards(statsAllTime, true);
+      });
+    }
+
+    // --- CHART DATA PREPARATION ---
+    const labels7D = stats.historyLabels.map(date => new Date(date).toLocaleDateString("en-US", { weekday: "short" }));
+    const data7D_success = stats.historyData;
+    const data7D_errors = stats.errorData;
+
+    const labels24H = [];
+    for (let i = 23; i >= 0; i--) {
+      const d = new Date();
+      d.setHours(d.getHours() - i);
+      labels24H.push(d.toLocaleString('en-US', { hour: 'numeric', hour12: true }));
+    }
+    const data24H_success = stats.hourlySuccess;
+    const data24H_errors = stats.hourlyErrors;
+    
+    // --- INITIALIZE CHART ---
     const ctx = document.getElementById("usageChart").getContext("2d");
     const textColor = getComputedStyle(document.body).getPropertyValue("--text-2").trim();
     const gridColor = getComputedStyle(document.body).getPropertyValue("--border").trim();
@@ -127,28 +198,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.dashboardChart = new Chart(ctx, {
       type: "line",
       data: {
-        labels: stats.historyLabels,
+        labels: labels24H,
         datasets: [
           {
             label: "Requests",
-            data: stats.historyData,
+            data: data24H_success,
             borderColor: "#3b82f6",
             backgroundColor: "rgba(59, 130, 246, 0.06)",
-            fill: true,
-            tension: 0.35,
-            pointRadius: 3,
-            pointBackgroundColor: "#3b82f6",
-            borderWidth: 1.5,
+            fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: "#3b82f6", borderWidth: 1.5,
           },
           {
             label: "Failures",
-            data: stats.errorData,
+            data: data24H_errors,
             borderColor: "#f43f5e",
             borderDash: [4, 4],
-            tension: 0.2,
-            pointRadius: 2,
-            borderWidth: 1,
-            fill: false,
+            tension: 0.2, pointRadius: 2, borderWidth: 1, fill: false,
           },
         ],
       },
@@ -161,37 +225,56 @@ document.addEventListener("DOMContentLoaded", async () => {
             backgroundColor: "rgba(13, 17, 23, 0.92)",
             titleFont: { family: "IBM Plex Mono", size: 11 },
             bodyFont: { family: "IBM Plex Mono", size: 11 },
-            borderColor: "#1e2a38",
-            borderWidth: 1,
-            padding: 10,
+            borderColor: "#1e2a38", borderWidth: 1, padding: 10,
             callbacks: {
-              title: (ctx) =>
-                new Date(ctx[0].label).toLocaleDateString("en-US", {
-                  weekday: "long", month: "long", day: "numeric",
-                }),
-            },
+              title: (context) => {
+                const label = context[0].label;
+                return label.includes("M") ? `Time: ${label}` : `Day: ${label}`;
+              }
+            }
           },
         },
         scales: {
           y: {
             beginAtZero: true,
             grid: { color: gridColor, lineWidth: 0.5 },
-            ticks: { color: textColor, font: { family: "IBM Plex Mono", size: 10 }, stepSize: 5 },
+            ticks: { color: textColor, font: { family: "IBM Plex Mono", size: 10 } },
           },
           x: {
             grid: { display: false },
-            ticks: {
-              color: textColor,
-              font: { family: "IBM Plex Mono", size: 10 },
-              callback: (_, i) =>
-                new Date(stats.historyLabels[i]).toLocaleDateString("en-US", { weekday: "short" }),
-            },
+            ticks: { color: textColor, font: { family: "IBM Plex Mono", size: 10 }, maxTicksLimit: 12 },
           },
         },
       },
     });
 
-    // Jobs table
+    // --- CHART TOGGLE LOGIC ---
+    const btn24h = document.getElementById("btn24h");
+    const btn7d = document.getElementById("btn7d");
+
+    if (btn24h && btn7d) {
+      function updateChart(view) {
+        if (view === "24h") {
+          btn24h.style.background = "var(--bg-2)"; btn24h.style.color = "var(--text-1)";
+          btn7d.style.background = "transparent"; btn7d.style.color = "var(--text-2)";
+          window.dashboardChart.data.labels = labels24H;
+          window.dashboardChart.data.datasets[0].data = data24H_success;
+          window.dashboardChart.data.datasets[1].data = data24H_errors;
+        } else {
+          btn7d.style.background = "var(--bg-2)"; btn7d.style.color = "var(--text-1)";
+          btn24h.style.background = "transparent"; btn24h.style.color = "var(--text-2)";
+          window.dashboardChart.data.labels = labels7D;
+          window.dashboardChart.data.datasets[0].data = data7D_success;
+          window.dashboardChart.data.datasets[1].data = data7D_errors;
+        }
+        window.dashboardChart.update();
+      }
+
+      btn24h.addEventListener("click", () => updateChart("24h"));
+      btn7d.addEventListener("click", () => updateChart("7d"));
+    }
+
+    // --- JOBS TABLE ---
     const tbody = document.getElementById("jobsTableBody");
     tbody.innerHTML = "";
 
@@ -201,7 +284,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         tr.innerHTML = `
           <td class="job-name">${job.name}</td>
           <td class="job-schedule">${job.schedule}</td>
-          <td class="job-desc">${job.description}</td>
+          <td class="job-desc">
+            ${job.description}
+            <div style="font-size: 0.7rem; color: var(--text-3); margin-top: 0.35rem;">
+               <i>${job.layman}</i>
+            </div>
+          </td>
           <td><span class="job-status ${job.status}">${job.status}</span></td>
         `;
         tbody.appendChild(tr);
@@ -210,14 +298,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       tbody.innerHTML = `<tr><td colspan="4" class="loading-cell">No processes registered.</td></tr>`;
     }
 
-    // Reveal page
     document.body.classList.add("loaded");
 
   } catch (err) {
     console.error("[dashboard] Initialisation failed:", err);
     const badge = document.getElementById("systemBadge");
-    badge.className = "status-badge error";
-    document.getElementById("statusText").textContent = "Error";
+    if(badge) badge.className = "status-badge error";
+    const statusText = document.getElementById("statusText");
+    if(statusText) statusText.textContent = "Error";
     document.body.classList.add("loaded");
   }
 });

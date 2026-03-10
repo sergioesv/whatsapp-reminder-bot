@@ -3,11 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manvi — The assistant that lives where you already are</title>
-  <meta name="description" content="Manvi is a personal AI assistant that works directly inside WhatsApp. Set reminders, manage routines, save contacts, search the web — all by sending a message.">
+  
+  <title>Manvi | The assistant that lives where you already are</title>
+  <meta name="description" content="Manvi is an enterprise-grade personal AI assistant that works directly inside WhatsApp. Set reminders, manage routines, save contacts, and search the web.">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Viswanath Bodasakurthi | OneMark">
+  <meta name="keywords" content="WhatsApp AI, Personal Assistant, AI Reminder Bot, Gemini AI, Productivity, Task Manager, Manvi OS, OneMark">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://manvi.onrender.com/">
+  <meta property="og:title" content="Manvi OS | Enterprise WhatsApp Assistant">
+  <meta property="og:description" content="Manvi is an enterprise-grade personal AI assistant that works directly inside WhatsApp. Set reminders, manage routines, save contacts, and search the web.">
+  <meta property="og:image" content="https://manvi.onrender.com/preview-image.jpg"> 
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Manvi OS | Enterprise WhatsApp Assistant">
+  <meta name="twitter:description" content="Set reminders, manage routines, and search the web — entirely through WhatsApp.">
+  <meta name="twitter:image" content="https://manvi.onrender.com/preview-image.jpg">
+
+  <link rel="icon" type="image/png" href="/assets/favicon-onemark/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon-onemark/favicon.svg" />
+  <link rel="shortcut icon" href="/assets/favicon-onemark/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-onemark/apple-touch-icon.png" />
+  <link rel="manifest" href="/assets/favicon-onemark/site.webmanifest" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
-  <style>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet"><style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -752,10 +773,23 @@
       .nav-links { display: none; }
     }
 
-    @media (max-width: 540px) {
+  @media (max-width: 540px) {
       .features-grid { grid-template-columns: 1fr; }
       .steps { grid-template-columns: 1fr; }
-      .social-proof { flex-wrap: wrap; }
+      
+      /* Fix 1: Change Social Proof to a clean 2x2 Grid on mobile */
+      .social-proof { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 1.5rem 1rem; 
+      }
+      .social-divider { display: none; } /* Hide the lines on mobile */
+      .social-stat { text-align: left; }
+    }
+    
+    /* Fix 2: Solidify the navbar for Android browsers */
+    nav {
+      background: rgba(255, 255, 255, 0.98); /* Increased opacity to prevent bleed */
     }
   </style>
 </head>

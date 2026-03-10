@@ -103,7 +103,7 @@ app.get("/api/ping", async (req, res) => {
 
 // ---------------------------------------------------------
 // STATUS API
-// /api/status — feeds the Manvi OS dashboard
+// /api/status — feeds the Manvi dashboard
 // ---------------------------------------------------------
 app.get("/api/status", async (req, res) => {
   try {
@@ -121,29 +121,33 @@ app.get("/api/status", async (req, res) => {
       },
       limits: LIMITS,
       stats,
-      jobs: [
+     jobs: [
         {
           name: "Webhook Listener",
           schedule: "Event-Driven",
           description: "Inbound message processor and AI intent router",
+          layman: "The 24/7 Receptionist: Instantly reads your message and hands it to the right department.",
           status: "active",
         },
         {
           name: "Reminder Dispatch",
           schedule: "* * * * *",
           description: "Fires pending one-off reminders past their scheduled time",
+          layman: "The Watcher: Checks your calendar every minute to ensure reminders fire exactly on time.",
           status: "scheduled",
         },
         {
           name: "Routine Dispatch",
           schedule: "* * * * *",
           description: "Matches current IST time against active daily routines",
+          layman: "The Habits Manager: Ensures recurring daily habits (like 'drink water') never get missed.",
           status: "scheduled",
         },
         {
           name: "Event Alert",
           schedule: "30 8 * * *",
           description: "Double-lock birthday and event alerts at 08:30 IST",
+          layman: "The Announcer: Wakes up once a day at 8:30 AM to alert you of any birthdays or anniversaries.",
           status: "scheduled",
         },
       ],
