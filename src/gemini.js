@@ -19,17 +19,17 @@ const gemini25Json = genAI.getGenerativeModel({
 });
 const gemini25Text = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-// Tier 3: Groq — Llama 3.3 (free)
-const groqAI = new OpenAI({
+// Tier 3: Groq — Llama 3.3 (free, optional)
+const groqAI = process.env.GROQ_API_KEY ? new OpenAI({
   baseURL: "https://api.groq.com/openai/v1",
   apiKey: process.env.GROQ_API_KEY,
-});
+}) : null;
 
-// Tier 4: OpenRouter — GPT-4o-mini (paid fallback)
-const backupAI = new OpenAI({
+// Tier 4: OpenRouter — GPT-4o-mini (paid fallback, optional)
+const backupAI = process.env.OPENROUTER_API_KEY ? new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY,
-});
+}) : null;
 
 // ---------------------------------------------------------
 // Feature 2: WhatsApp Markdown Formatter
@@ -224,7 +224,9 @@ Use this history ONLY to understand follow-up context (e.g. "who was the captain
   }
 
   // --- TIER 3: GROQ (FREE — LLAMA 3.3) ---
+  if (!groqAI) console.warn("[groq] Skipping Tier 3 — no GROQ_API_KEY");
   try {
+    if (!groqAI) throw new Error("Groq not configured");
     console.log("[groq] Routing to Tier 3");
     const response = await groqAI.chat.completions.create({
       model: "llama-3.3-70b-versatile",
@@ -251,6 +253,7 @@ Use this history ONLY to understand follow-up context (e.g. "who was the captain
 
   // --- TIER 4: OPENROUTER (PAID — GPT-4o-mini) ---
   try {
+    if (!backupAI) throw new Error("OpenRouter not configured");
     console.log("[openrouter] Routing to Tier 4");
     const response = await backupAI.chat.completions.create({
       model: "openai/gpt-4o-mini",
