@@ -5,19 +5,19 @@ require("dotenv").config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Tier 1: Gemini 1.5 Flash (rapido y economico)
+// Tier 1: Gemini 2.0 Flash (economico y rapido)
 const gemini3Json = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-2.0-flash",
   generationConfig: { responseMimeType: "application/json" },
 });
-const gemini3Text = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const gemini3Text = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-// Tier 2: Gemini 1.5 Flash (mismo modelo como fallback)
+// Tier 2: Gemini 2.0 Flash (fallback)
 const gemini25Json = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-2.0-flash",
   generationConfig: { responseMimeType: "application/json" },
 });
-const gemini25Text = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const gemini25Text = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // Tier 3: Groq — Llama 3.3 (free, optional)
 const groqAI = process.env.GROQ_API_KEY ? new OpenAI({
