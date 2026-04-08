@@ -1,8 +1,8 @@
 {
-  "name": "manvi-whatsapp-assistant",
-  "version": "1.1.0",
-  "description": "Agentic WhatsApp assistant with 4-tier AI waterfall, live web search, and self-monitoring dashboard",
-  "author": "Viswanath Bodasakurthi <viswanath@onemark.digital>",
+  "name": "whatsappreminder-bot",
+  "version": "1.0.0",
+  "description": "Bot personal de WhatsApp con recordatorios y tareas — Twilio + Supabase + Gemini",
+  "author": "Sergio",
   "license": "MIT",
   "main": "src/server.js",
   "scripts": {
@@ -19,7 +19,8 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "node-cron": "^4.2.1",
-    "openai": "^6.25.0"
+    "openai": "^6.25.0",
+    "twilio": "^5.3.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",

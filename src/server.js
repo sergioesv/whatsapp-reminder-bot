@@ -11,8 +11,10 @@ const { getUsage, LIMITS } = require("./usage");
 const { version } = require("../package.json");
 const { getHeartbeats } = require("./scheduler");
 
+const twilio = require("twilio");
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded data
 app.use(express.static("public"));
 
 // ---------------------------------------------------------
@@ -34,17 +36,17 @@ app.get("/status", (req, res) => {
 // HELPERS
 // ---------------------------------------------------------
 
-// Converts AI-extracted HH:MM:SS to a full IST-offset ISO timestamp
+// Converts AI-extracted HH:MM:SS to a full COT-offset ISO timestamp
 function buildReminderDate(timeString, dateString = null) {
   const now = new Date();
 
   if (dateString) {
-    const reminderDate = new Date(`${dateString}T${timeString}+05:30`);
+    const reminderDate = new Date(`${dateString}T${timeString}-05:00`);
     return reminderDate.toISOString();
   }
 
   const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Kolkata",
+    timeZone: "America/Bogota",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -54,7 +56,7 @@ function buildReminderDate(timeString, dateString = null) {
   const month = parts.find((p) => p.type === "month").value;
   const day = parts.find((p) => p.type === "day").value;
 
-  const isoString = `${year}-${month}-${day}T${timeString}+05:30`;
+  const isoString = `${year}-${month}-${day}T${timeString}-05:00`;
   const reminderDate = new Date(isoString);
 
   if (reminderDate < now) {
@@ -143,7 +145,7 @@ app.get("/api/status", async (req, res) => {
       {
         name: "Routine Dispatch",
         schedule: "* * * * *",
-        description: "Matches current IST time against active daily routines",
+        description: "Matches current COT time against active daily routines",
         layman: "The Habits Manager: Ensures recurring daily habits never get missed.",
         status: "scheduled",
         lastFired: dbJobs?.find(j => j.job_name === 'Routine Dispatch')?.last_fired || heartbeats['Routine Dispatch']
@@ -159,7 +161,7 @@ app.get("/api/status", async (req, res) => {
       {
         name: "Event Alert",
         schedule: "30 8 * * *",
-        description: "Double-lock birthday and event alerts at 08:30 IST",
+        description: "Double-lock birthday and event alerts at 08:30 COT",
         layman: "The Announcer: Wakes up once a day at 8:30 AM to alert you of any birthdays or anniversaries.",
         status: "scheduled",
         lastFired: dbJobs?.find(j => j.job_name === 'Event Alert')?.last_fired || heartbeats['Event Alert']
@@ -186,49 +188,28 @@ app.get("/api/status", async (req, res) => {
 });
 
 // ---------------------------------------------------------
-// WEBHOOK VERIFICATION
+// WEBHOOK — Twilio (no verification GET needed for Twilio Sandbox)
 // ---------------------------------------------------------
-app.get("/webhook", (req, res) => {
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-
-  if (mode && token === process.env.VERIFY_TOKEN) {
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
-  }
-});
 
 // ---------------------------------------------------------
-// MAIN WEBHOOK — Inbound message processor
+// MAIN WEBHOOK — Inbound message processor (Twilio)
 // ---------------------------------------------------------
 app.post("/webhook", async (req, res) => {
+  // Twilio signature validation (optional but recommended in production)
+  // const twilioSignature = req.headers["x-twilio-signature"];
+  // const valid = twilio.validateRequest(process.env.TWILIO_AUTH_TOKEN, twilioSignature, process.env.PUBLIC_URL + "/webhook", req.body);
+  // if (!valid) return res.sendStatus(403);
+
   res.sendStatus(200);
 
-  const messageData = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-  if (!messageData) return;
+  // Twilio sends: Body, From, To
+  const message = req.body.Body;
+  const rawFrom = req.body.From; // e.g. "whatsapp:+573001234567"
 
-  // Feature 4: Graceful media/unsupported type handling
-  // If the message has no text body, check the type and reply helpfully
-  if (!messageData?.text?.body) {
-    const mediaTypes = ["audio", "image", "video", "document", "sticker"];
-    const msgType = messageData.type;
+  if (!message || !rawFrom) return;
 
-    if (mediaTypes.includes(msgType)) {
-      const senderPhone = messageData.from;
-      const typeLabel = msgType === "audio" ? "voice notes" : `${msgType}s`;
-      await sendWhatsAppMessage(
-        senderPhone,
-        `I can only read text messages right now. I cannot process ${typeLabel}. Please type your request.`
-      );
-    }
-    // For unknown/unsupported types (reaction, location, etc.) — silently drop
-    return;
-  }
-
-  const message = messageData.text.body;
-  const senderPhone = messageData.from;
+  // Strip "whatsapp:+" prefix to normalize phone number
+  const senderPhone = rawFrom.replace("whatsapp:+", "").replace("whatsapp:", "");
   const lowerMsg = message.toLowerCase().trim();
 
   // 1. CALLER ID
@@ -236,7 +217,7 @@ app.post("/webhook", async (req, res) => {
   let isOwner = false;
 
   if (senderPhone === process.env.MY_PHONE_NUMBER) {
-    senderName = "Viswanath";
+    senderName = "Sergio";
     isOwner = true;
   } else {
     const { data: contact } = await supabase
@@ -487,7 +468,7 @@ app.post("/webhook", async (req, res) => {
           text += "One-off Reminders:\n\n";
           oneOff.forEach((r) => {
             const t = new Date(r.reminder_time).toLocaleString("en-US", {
-              timeZone: "Asia/Kolkata", month: "short", day: "numeric",
+              timeZone: "America/Bogota", month: "short", day: "numeric",
               hour: "numeric", minute: "2-digit", hour12: true,
             });
             text += `- [${t}] ${r.group_name ? r.group_name + ": " : ""}${r.message}\n`;
@@ -503,7 +484,7 @@ app.post("/webhook", async (req, res) => {
           });
           Object.entries(grouped).forEach(([msg, times]) => {
             const next = new Date(times[0]).toLocaleString("en-US", {
-              timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit", hour12: true,
+              timeZone: "America/Bogota", hour: "numeric", minute: "2-digit", hour12: true,
             });
             text += `- "${msg}" — ${times.length} alerts remaining, next at ${next}\n`;
           });
@@ -599,7 +580,7 @@ app.post("/webhook", async (req, res) => {
         text += `\nReminders:\n`;
         reminders.forEach((r) => {
           const t = new Date(r.reminder_time).toLocaleTimeString("en-US", {
-            timeZone: "Asia/Kolkata",
+            timeZone: "America/Bogota",
             hour: "numeric",
             minute: "2-digit",
             hour12: true,
