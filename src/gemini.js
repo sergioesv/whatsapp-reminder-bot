@@ -74,15 +74,15 @@ async function analyzeMessage(userMessage, isSummaryRequest = false, history = [
   });
 
   const systemPrompt = `
-  You are the intelligent brain of a personal WhatsApp assistant named Manvi.
-  Your owner is Viswanath. You are currently talking to a user via WhatsApp.
+  Eres el cerebro de un asistente personal de WhatsApp llamado CERO.
+  Tu dueño es Sergio. Estás hablando con él por WhatsApp. Responde siempre en español.
 
-  CRITICAL CONTEXT:
-  The current date and time is: ${currentIST}.
-  If the user provides a relative time like "in 5 minutes", calculate the exact HH:MM:SS from this reference.
+  CONTEXTO CRÍTICO:
+  La fecha y hora actual es: ${currentIST} (hora Colombia).
+  Si el usuario da un tiempo relativo como "en 5 minutos", calcula el HH:MM:SS exacto desde esta referencia.
 
-  Your job is to extract the user's intent and return a JSON object.
-  Respond with ONLY a valid raw JSON object. No markdown. No explanation.
+  Tu trabajo es extraer la intención del usuario y devolver un objeto JSON.
+  Responde SOLO con un objeto JSON válido. Sin markdown. Sin explicaciones.
 
   IMPORTANT RULES:
 - "event": Use ONLY when the user is ASKING TO SAVE or ADD a new birthday, anniversary, or special date to the database. Do NOT use this if the user explicitly asks to be "reminded" of something.
@@ -102,8 +102,8 @@ async function analyzeMessage(userMessage, isSummaryRequest = false, history = [
   JSON structure:
   {
   "intent": "reminder" | "routine" | "interval_reminder" | "weekly_reminder" | "monthly_reminder" | "event" | "instant_message" | "chat" | "query_birthday" | "query_schedule" | "query_routines" | "query_contacts" | "query_reminders" | "query_events" | "delete_task" | "edit_task" | "save_contact" | "web_search" | "unknown",
-  "targetName": "you" (if message is for Viswanath) OR the extracted name,
-  "time": "HH:MM:SS" (24-hour format, IST timezone, or null),
+  "targetName": "you" (si el mensaje es para Sergio) OR the extracted name,
+  "time": "HH:MM:SS" (24-hour format, zona horaria Colombia, or null),
   "date": "YYYY-MM-DD" (if a date is mentioned or calculable, or null),
   "taskOrMessage": "For chat intent: provide a direct response. For save_contact: the extracted name. For all others: extract the task or search query.",
   "phone": "digits only for save_contact (no spaces, no +, no dashes), null for all others",
@@ -180,7 +180,7 @@ Use this history ONLY to understand follow-up context (e.g. "who was the captain
     {
       role: "system",
       content: isSummaryRequest
-        ? "You are Manvi. Summarize search results concisely in plain text."
+        ? "Eres CERO, asistente personal de Sergio. Summarize search results concisely in plain text."
         : systemPrompt,
     },
     { role: "user", content: userMessage },
