@@ -1,4 +1,3 @@
-const MSG = require("../messages_es");
 const express = require("express");
 const path = require("path");
 const { performance } = require("perf_hooks");
@@ -46,7 +45,7 @@ function buildReminderDate(timeString, dateString = null) {
     return reminderDate.toISOString();
   }
 
-  const formatter = new Intl.DateTimeFormat("en-US", {
+  const formatter = new Intl.DateTimeFormat("es-CO", {
     timeZone: "America/Bogota",
     year: "numeric",
     month: "2-digit",
@@ -68,7 +67,7 @@ function buildReminderDate(timeString, dateString = null) {
 
 // Formats HH:MM or HH:MM:SS to "9:00 AM"
 function formatTimeDisplay(rawTime) {
-  return new Date(`1970-01-01T${rawTime}`).toLocaleTimeString("en-US", {
+  return new Date(`1970-01-01T${rawTime}`).toLocaleTimeString("es-CO", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
@@ -97,7 +96,7 @@ app.get("/api/ping", async (req, res) => {
   const latency = Math.round(performance.now() - start);
 
   res.status(error ? 500 : 200).json({
-    status: error ? "degraded" : "ok",
+    status: error ? "degradado" : "ok",
     latency_ms: latency,
     timestamp: new Date().toISOString(),
   });
@@ -128,42 +127,42 @@ app.get("/api/status", async (req, res) => {
 
     const jobs = [
       {
-        name: "Webhook Listener",
-        schedule: "Event-Driven",
-        description: "Inbound message processor and AI intent router",
-        layman: "The 24/7 Receptionist: Instantly reads your message and hands it to the right department.",
+        name: "Receptor de webhook",
+        schedule: "Por eventos",
+        description: "Procesador de mensajes entrantes y enrutador de intenciones por IA",
+        layman: "La recepción 24/7: lee tu mensaje al instante y lo deriva al flujo correcto.",
         status: "active",
-        lastFired: "Live"
+        lastFired: "En vivo"
       },
       {
-        name: "Reminder & Interval Dispatch",
+        name: "Envío de recordatorios e intervalos",
         schedule: "* * * * *",
-        description: "Fires pending one-off and interval reminders past their scheduled time",
-        layman: "The Watcher: Checks every minute for due reminders — one-off, future-dated, and repeating interval alerts.",
+        description: "Ejecuta recordatorios únicos y por intervalo que ya cumplieron su hora",
+        layman: "El vigilante: cada minuto revisa recordatorios pendientes, con fecha futura y alertas por intervalo.",
         status: "scheduled",
         lastFired: dbJobs?.find(j => j.job_name === 'Reminder Dispatch')?.last_fired || heartbeats['Reminder Dispatch']
       },
       {
-        name: "Routine Dispatch",
+        name: "Envío de rutinas",
         schedule: "* * * * *",
-        description: "Matches current COT time against active daily routines",
-        layman: "The Habits Manager: Ensures recurring daily habits never get missed.",
+        description: "Compara la hora actual (COT) con las rutinas diarias activas",
+        layman: "Los hábitos: asegura que las rutinas diarias recurrentes no se pierdan.",
         status: "scheduled",
         lastFired: dbJobs?.find(j => j.job_name === 'Routine Dispatch')?.last_fired || heartbeats['Routine Dispatch']
       },
       {
-        name: "Recurring Task Dispatch",
+        name: "Envío de tareas recurrentes",
         schedule: "* * * * *",
-        description: "Fires weekly and monthly recurring tasks on their scheduled day and time",
-        layman: "The Calendar: Handles weekly and monthly recurring reminders like rent or trash day.",
+        description: "Ejecuta tareas semanales y mensuales en su día y hora programados",
+        layman: "El calendario: maneja recordatorios semanales y mensuales (por ejemplo, pagos o rutinas fijas).",
         status: "scheduled",
         lastFired: dbJobs?.find(j => j.job_name === 'Recurring Task Dispatch')?.last_fired || heartbeats['Recurring Task Dispatch']
       },
       {
-        name: "Event Alert",
+        name: "Alerta de eventos",
         schedule: "30 8 * * *",
-        description: "Double-lock birthday and event alerts at 08:30 COT",
-        layman: "The Announcer: Wakes up once a day at 8:30 AM to alert you of any birthdays or anniversaries.",
+        description: "Refuerzo de alertas de cumpleaños y eventos a las 08:30 COT",
+        layman: "El anuncio: una vez al día a las 8:30 avisa cumpleaños y aniversarios.",
         status: "scheduled",
         lastFired: dbJobs?.find(j => j.job_name === 'Event Alert')?.last_fired || heartbeats['Event Alert']
       },
@@ -183,8 +182,8 @@ app.get("/api/status", async (req, res) => {
       jobs,
     });
   } catch (err) {
-    console.error("[status] Failed to fetch system status:", err);
-    res.status(500).json({ success: false, error: "Failed to fetch system status" });
+    console.error("[status] Error al obtener el estado del sistema:", err);
+    res.status(500).json({ success: false, error: "No se pudo obtener el estado del sistema" });
   }
 });
 
@@ -214,7 +213,7 @@ app.post("/webhook", async (req, res) => {
   const lowerMsg = message.toLowerCase().trim();
 
   // 1. CALLER ID
-  let senderName = "Guest";
+  let senderName = "Invitado";
   let isOwner = false;
 
   if (senderPhone === process.env.MY_PHONE_NUMBER) {
@@ -235,23 +234,25 @@ app.post("/webhook", async (req, res) => {
   if (lowerMsg === "/limit") {
     const u = await getUsage();
     const msg =
-      `System Limits\n\n` +
-      `AI Engines\n` +
+      `Límites del sistema\n\n` +
+      `Motores de IA\n` +
       `Gemini: ${u.gemini} / ${LIMITS.gemini}\n` +
       `Groq: ${u.groq} / ${LIMITS.groq}\n` +
       `OpenRouter: ${u.openrouter} / ${LIMITS.openrouter}\n\n` +
-      `Search Engines\n` +
-      `Tavily (monthly): ${u.tavily} / ${LIMITS.tavily}\n` +
-      `Serper (lifetime): ${u.serper} / ${LIMITS.serper}\n\n` +
-      `Status: Operational`;
+      `Motores de búsqueda\n` +
+      `Tavily (mensual): ${u.tavily} / ${LIMITS.tavily}\n` +
+      `Serper (total): ${u.serper} / ${LIMITS.serper}\n\n` +
+      `Estado: Operativo`;
     return await replyAndLog(senderPhone, senderName, message, msg);
   }
 
   // 3. GREETING
-  if (lowerMsg === "hi" || lowerMsg === "hello" || lowerMsg === "hey") {
+  if (
+    ["hi", "hello", "hey", "hola", "buenas", "buenos días", "buen día", "buenas tardes", "buenas noches"].includes(lowerMsg)
+  ) {
     const text = isOwner
-      ? `Hello Viswanath. Manvi online. You can set reminders, routines, events, search the web, or query your schedule.`
-      : `Hello ${senderName}. I am Manvi, Viswanath's personal assistant.`;
+      ? `Hola Sergio. Manvi en línea. Puedes crear recordatorios, rutinas, eventos, buscar en la web o consultar tu agenda.`
+      : `Hola ${senderName}. Soy Manvi, la asistente personal de Sergio.`;
     return await replyAndLog(senderPhone, senderName, message, text);
   }
 
@@ -301,7 +302,7 @@ app.post("/webhook", async (req, res) => {
         targetPhone = contact.phone;
         finalName = contact.name.charAt(0).toUpperCase() + contact.name.slice(1);
       } else {
-        return await respond(`Contact "${targetName}" not found in address book.`);
+        return await respond(`No encontré el contacto "${targetName}" en la agenda.`);
       }
     } else {
       finalName = targetName.charAt(0).toUpperCase() + targetName.slice(1);
@@ -315,27 +316,27 @@ app.post("/webhook", async (req, res) => {
     }
 
     if (intent === "api_error") {
-      return await respond(`AI unavailable: ${taskOrMessage}`);
+      return await respond(`IA no disponible: ${taskOrMessage}`);
     }
 
     if (intent === "web_search") {
       const searchResults = await searchWeb(taskOrMessage);
-      if (!searchResults) return await respond("Search tools are currently unavailable.");
+      if (!searchResults) return await respond("Las herramientas de búsqueda no están disponibles en este momento.");
 
       const summaryPrompt =
-        `Manvi assistant. Viswanath asked: "${message}". ` +
-        `Results from ${searchResults.source}: ${searchResults.data}. ` +
-        `Provide a concise, accurate response.`;
+        `Asistente Manvi. El usuario preguntó: "${message}". ` +
+        `Resultados de ${searchResults.source}: ${searchResults.data}. ` +
+        `Responde de forma breve y precisa en español.`;
 
       const summaryResult = await analyzeMessage(summaryPrompt, true);
       return await respond(
-        `Search Results (${searchResults.source})\n\n${summaryResult.text}`,
+        `Resultados de búsqueda (${searchResults.source})\n\n${summaryResult.text}`,
         summaryResult.ai_meta
       );
     }
 
     if (intent === "delete_task") {
-      if (!isOwner) return await respond("Access denied.");
+      if (!isOwner) return await respond("Acceso denegado.");
 
       const cleanTask = taskOrMessage.replace(/(routine|reminder|task|event)/gi, "").trim();
 
@@ -345,7 +346,7 @@ app.post("/webhook", async (req, res) => {
         .ilike("message", `%${cleanTask}%`)
         .select();
       if (remData?.length > 0)
-        return await respond(`Deleted reminder: "${remData[0].message}"`);
+        return await respond(`Recordatorio eliminado: "${remData[0].message}"`);
 
       const { data: routData } = await supabase
         .from("daily_routines")
@@ -353,7 +354,7 @@ app.post("/webhook", async (req, res) => {
         .ilike("task_name", `%${cleanTask}%`)
         .select();
       if (routData?.length > 0)
-        return await respond(`Deleted routine: "${routData[0].task_name}"`);
+        return await respond(`Rutina eliminada: "${routData[0].task_name}"`);
 
       const { data: recurData } = await supabase
         .from("recurring_tasks")
@@ -361,7 +362,7 @@ app.post("/webhook", async (req, res) => {
         .ilike("task_name", `%${cleanTask}%`)
         .select();
       if (recurData?.length > 0)
-        return await respond(`Deleted recurring task: "${recurData[0].task_name}"`);
+        return await respond(`Tarea recurrente eliminada: "${recurData[0].task_name}"`);
 
       const { data: eventData } = await supabase
         .from("special_events")
@@ -369,21 +370,21 @@ app.post("/webhook", async (req, res) => {
         .ilike("person_name", `%${cleanTask}%`)
         .select();
       if (eventData?.length > 0)
-        return await respond(`Deleted event for: "${eventData[0].person_name}"`);
+        return await respond(`Evento eliminado para: "${eventData[0].person_name}"`);
 
-      return await respond(`No task matching "${cleanTask}" found.`);
+      return await respond(`No hay ninguna tarea que coincida con "${cleanTask}".`);
     }
 
     // Feature 1: edit_task — modify the most recent matching reminder
     if (intent === "edit_task") {
-      if (!isOwner) return await respond("Access denied.");
+      if (!isOwner) return await respond("Acceso denegado.");
 
       const cleanTask = (aiResult.editTarget || taskOrMessage || "")
         .replace(/(routine|reminder|task|event)/gi, "")
         .trim();
 
-      if (!cleanTask) return await respond("Could not identify which task to edit. Please be more specific.");
-      if (!time) return await respond("Please specify the new time for the task.");
+      if (!cleanTask) return await respond("No pude identificar qué tarea editar. Sé más específico.");
+      if (!time) return await respond("Indica la nueva hora de la tarea.");
 
       // Find the most recent pending reminder matching the task name
       const { data: matches } = await supabase
@@ -396,7 +397,7 @@ app.post("/webhook", async (req, res) => {
         .limit(1);
 
       if (!matches || matches.length === 0) {
-        return await respond(`No pending reminder found matching "${cleanTask}".`);
+        return await respond(`No hay recordatorios pendientes que coincidan con "${cleanTask}".`);
       }
 
       const existing = matches[0];
@@ -414,19 +415,19 @@ app.post("/webhook", async (req, res) => {
 
       return await respond(
         !insertErr
-          ? `Updated "${existing.message}" to ${formatTimeDisplay(time)}.`
-          : "Failed to update reminder. Please try again."
+          ? `Actualicé "${existing.message}" a las ${formatTimeDisplay(time)}.`
+          : "No se pudo actualizar el recordatorio. Intenta de nuevo."
       );
     }
 
     if (intent === "save_contact") {
-      if (!isOwner) return await respond("Access denied.");
+      if (!isOwner) return await respond("Acceso denegado.");
 
       const name = taskOrMessage?.trim();
       const phone = aiResult.phone?.replace(/\D/g, "");
 
-      if (!name) return await respond("Please provide a name for the contact.");
-      if (!phone || phone.length < 10) return await respond("Please provide a valid phone number with country code.");
+      if (!name) return await respond("Indica el nombre del contacto.");
+      if (!phone || phone.length < 10) return await respond("Indica un número válido con código de país.");
 
       const { error } = await supabase
         .from("contacts")
@@ -434,18 +435,18 @@ app.post("/webhook", async (req, res) => {
 
       return await respond(
         !error
-          ? `Contact saved: ${name} — ${phone}`
-          : "Failed to save contact. Please try again."
+          ? `Contacto guardado: ${name} — ${phone}`
+          : "No se pudo guardar el contacto. Intenta de nuevo."
       );
     }
 
     if (["query_routines", "query_contacts", "query_reminders", "query_events"].includes(intent)) {
-      if (!isOwner) return await respond("Access denied. These records are private.");
+      if (!isOwner) return await respond("Acceso denegado. Estos datos son privados.");
 
       if (intent === "query_contacts") {
         const { data } = await supabase.from("contacts").select("name").order("name");
-        if (!data || data.length === 0) return await respond("No contacts saved.");
-        let text = "Address Book:\n\n";
+        if (!data || data.length === 0) return await respond("No hay contactos guardados.");
+        let text = "Agenda:\n\n";
         data.forEach((c) => (text += `- ${c.name.charAt(0).toUpperCase() + c.name.slice(1)}\n`));
         return await respond(text);
       }
@@ -458,7 +459,7 @@ app.post("/webhook", async (req, res) => {
           .eq("phone", targetPhone)
           .gt("reminder_time", nowIso)
           .order("reminder_time");
-        if (!data || data.length === 0) return await respond("No upcoming reminders.");
+        if (!data || data.length === 0) return await respond("No hay recordatorios próximos.");
 
         const oneOff = data.filter((r) => r.group_name !== "interval");
         const interval = data.filter((r) => r.group_name === "interval");
@@ -466,9 +467,9 @@ app.post("/webhook", async (req, res) => {
         let text = "";
 
         if (oneOff.length > 0) {
-          text += "One-off Reminders:\n\n";
+          text += "Recordatorios puntuales:\n\n";
           oneOff.forEach((r) => {
-            const t = new Date(r.reminder_time).toLocaleString("en-US", {
+            const t = new Date(r.reminder_time).toLocaleString("es-CO", {
               timeZone: "America/Bogota", month: "short", day: "numeric",
               hour: "numeric", minute: "2-digit", hour12: true,
             });
@@ -477,17 +478,17 @@ app.post("/webhook", async (req, res) => {
         }
 
         if (interval.length > 0) {
-          text += `\nInterval Reminders (${interval.length} pending):\n\n`;
+          text += `\nRecordatorios por intervalo (${interval.length} pendientes):\n\n`;
           const grouped = {};
           interval.forEach((r) => {
             if (!grouped[r.message]) grouped[r.message] = [];
             grouped[r.message].push(r.reminder_time);
           });
           Object.entries(grouped).forEach(([msg, times]) => {
-            const next = new Date(times[0]).toLocaleString("en-US", {
+            const next = new Date(times[0]).toLocaleString("es-CO", {
               timeZone: "America/Bogota", hour: "numeric", minute: "2-digit", hour12: true,
             });
-            text += `- "${msg}" — ${times.length} alerts remaining, next at ${next}\n`;
+            text += `- "${msg}" — ${times.length} alertas restantes, la próxima a las ${next}\n`;
           });
         }
 
@@ -510,23 +511,23 @@ app.post("/webhook", async (req, res) => {
         const hasDailyData = dailyData && dailyData.length > 0;
         const hasRecurData = recurData && recurData.length > 0;
 
-        if (!hasDailyData && !hasRecurData) return await respond("No active routines or recurring tasks.");
+        if (!hasDailyData && !hasRecurData) return await respond("No hay rutinas diarias ni tareas recurrentes activas.");
 
         let text = "";
 
         if (hasDailyData) {
-          text += "Daily Routines:\n\n";
+          text += "Rutinas diarias:\n\n";
           dailyData.forEach((r) => (text += `- ${formatTimeDisplay(r.reminder_time)}: ${r.task_name}\n`));
         }
 
         if (hasRecurData) {
-          text += "\nRecurring Tasks:\n\n";
-          const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+          text += "\nTareas recurrentes:\n\n";
+          const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
           recurData.forEach((r) => {
             if (r.recurrence_type === "weekly") {
-              text += `- Every ${DAY_NAMES[r.day_of_week]} at ${formatTimeDisplay(r.reminder_time)}: ${r.task_name}\n`;
+              text += `- Cada ${DAY_NAMES[r.day_of_week]} a las ${formatTimeDisplay(r.reminder_time)}: ${r.task_name}\n`;
             } else {
-              text += `- Every month on the ${r.day_of_month} at ${formatTimeDisplay(r.reminder_time)}: ${r.task_name}\n`;
+              text += `- Cada mes el día ${r.day_of_month} a las ${formatTimeDisplay(r.reminder_time)}: ${r.task_name}\n`;
             }
           });
         }
@@ -536,8 +537,8 @@ app.post("/webhook", async (req, res) => {
 
       if (intent === "query_events") {
         const { data } = await supabase.from("special_events").select("*").order("event_date");
-        if (!data || data.length === 0) return await respond("No special events saved.");
-        let text = "Special Events:\n\n";
+        if (!data || data.length === 0) return await respond("No hay eventos especiales guardados.");
+        let text = "Eventos especiales:\n\n";
         data.forEach((e) => (text += `- ${e.event_date}: ${e.person_name} — ${e.event_type}\n`));
         return await respond(text);
       }
@@ -552,13 +553,13 @@ app.post("/webhook", async (req, res) => {
         .single();
       return await respond(
         data
-          ? `${finalName}'s birthday: ${data.event_date}`
-          : `No birthday saved for ${finalName}.`
+          ? `Cumpleaños de ${finalName}: ${data.event_date}`
+          : `No hay cumpleaños guardado para ${finalName}.`
       );
     }
 
     if (intent === "query_schedule") {
-      if (!date) return await respond("Please specify a date.");
+      if (!date) return await respond("Indica una fecha.");
 
       const { data: events } = await supabase
         .from("special_events")
@@ -570,17 +571,17 @@ app.post("/webhook", async (req, res) => {
         .like("reminder_time", `${date}%`);
 
       const hasItems = (events?.length > 0) || (reminders?.length > 0);
-      if (!hasItems) return await respond(`No events or reminders found for ${date}.`);
+      if (!hasItems) return await respond(`No hay eventos ni recordatorios para ${date}.`);
 
-      let text = `Schedule — ${date}\n\n`;
+      let text = `Agenda — ${date}\n\n`;
       if (events?.length > 0) {
-        text += `Events:\n`;
+        text += `Eventos:\n`;
         events.forEach((e) => (text += `- ${e.person_name} — ${e.event_type}\n`));
       }
       if (reminders?.length > 0) {
-        text += `\nReminders:\n`;
+        text += `\nRecordatorios:\n`;
         reminders.forEach((r) => {
-          const t = new Date(r.reminder_time).toLocaleTimeString("en-US", {
+          const t = new Date(r.reminder_time).toLocaleTimeString("es-CO", {
             timeZone: "America/Bogota",
             hour: "numeric",
             minute: "2-digit",
@@ -593,7 +594,7 @@ app.post("/webhook", async (req, res) => {
     }
 
     if (intent === "event") {
-      const eventPersonName = finalName.toLowerCase() === "you" ? "Viswanath" : finalName;
+      const eventPersonName = finalName.toLowerCase() === "you" ? "Sergio" : finalName;
       const { error } = await supabase.from("special_events").insert([{
         phone: targetPhone,
         event_type: taskOrMessage,
@@ -602,8 +603,8 @@ app.post("/webhook", async (req, res) => {
       }]);
       return await respond(
         !error
-          ? `Saved ${eventPersonName}'s ${taskOrMessage} on ${date}.`
-          : "Failed to save event. Please try again."
+          ? `Guardé el ${taskOrMessage} de ${eventPersonName} el ${date}.`
+          : "No se pudo guardar el evento. Intenta de nuevo."
       );
     }
 
@@ -615,8 +616,8 @@ app.post("/webhook", async (req, res) => {
       }]);
       return await respond(
         !error
-          ? `Routine set — ${taskOrMessage} daily at ${formatTimeDisplay(time)}.`
-          : "Failed to save routine. Please try again."
+          ? `Rutina configurada — ${taskOrMessage} todos los días a las ${formatTimeDisplay(time)}.`
+          : "No se pudo guardar la rutina. Intenta de nuevo."
       );
     }
 
@@ -624,11 +625,11 @@ app.post("/webhook", async (req, res) => {
     if (intent === "weekly_reminder") {
       const dayOfWeek = parseInt(aiResult.dayOfWeek);
       if (isNaN(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
-        return await respond("Could not determine the day of the week. Please try again.");
+        return await respond("No pude determinar el día de la semana. Intenta de nuevo.");
       }
-      if (!time) return await respond("Please specify a time for the weekly reminder.");
+      if (!time) return await respond("Indica la hora del recordatorio semanal.");
 
-      const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
       const { error } = await supabase.from("recurring_tasks").insert([{
         phone: targetPhone,
         task_name: taskOrMessage,
@@ -640,17 +641,17 @@ app.post("/webhook", async (req, res) => {
       }]);
       return await respond(
         !error
-          ? `Weekly reminder set — "${taskOrMessage}" every ${DAY_NAMES[dayOfWeek]} at ${formatTimeDisplay(time)}.`
-          : "Failed to save weekly reminder. Please try again."
+          ? `Recordatorio semanal configurado — "${taskOrMessage}" cada ${DAY_NAMES[dayOfWeek]} a las ${formatTimeDisplay(time)}.`
+          : "No se pudo guardar el recordatorio semanal. Intenta de nuevo."
       );
     }
 
     if (intent === "monthly_reminder") {
       const dayOfMonth = parseInt(aiResult.dayOfMonth);
       if (isNaN(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) {
-        return await respond("Could not determine the day of the month. Please try again.");
+        return await respond("No pude determinar el día del mes. Intenta de nuevo.");
       }
-      if (!time) return await respond("Please specify a time for the monthly reminder.");
+      if (!time) return await respond("Indica la hora del recordatorio mensual.");
 
       const { error } = await supabase.from("recurring_tasks").insert([{
         phone: targetPhone,
@@ -663,8 +664,8 @@ app.post("/webhook", async (req, res) => {
       }]);
       return await respond(
         !error
-          ? `Monthly reminder set — "${taskOrMessage}" on the ${dayOfMonth} of every month at ${formatTimeDisplay(time)}.`
-          : "Failed to save monthly reminder. Please try again."
+          ? `Recordatorio mensual configurado — "${taskOrMessage}" el día ${dayOfMonth} de cada mes a las ${formatTimeDisplay(time)}.`
+          : "No se pudo guardar el recordatorio mensual. Intenta de nuevo."
       );
     }
 
@@ -672,18 +673,18 @@ app.post("/webhook", async (req, res) => {
       if (finalName.toLowerCase() === "you") {
         await sendWhatsAppMessage(
           process.env.MY_PHONE_NUMBER,
-          `Message from ${senderName}: ${taskOrMessage}`
+          `Mensaje de ${senderName}: ${taskOrMessage}`
         );
-        return await respond("Message forwarded.");
+        return await respond("Mensaje reenviado.");
       } else {
-        await sendWhatsAppMessage(targetPhone, `Message from ${senderName}: ${taskOrMessage}`);
-        return await respond(`Message sent to ${finalName}.`);
+        await sendWhatsAppMessage(targetPhone, `Mensaje de ${senderName}: ${taskOrMessage}`);
+        return await respond(`Mensaje enviado a ${finalName}.`);
       }
     }
 
     if (intent === "reminder") {
-      if (!time) return await respond("Please specify a time for the reminder.");
-      if (!taskOrMessage || taskOrMessage.trim() === "") return await respond("Please specify what the reminder is for.");
+      if (!time) return await respond("Indica la hora del recordatorio.");
+      if (!taskOrMessage || taskOrMessage.trim() === "") return await respond("Indica para qué es el recordatorio.");
       const dbTimestamp = buildReminderDate(time, date || null);
       const insertPayload = {
         phone: targetPhone,
@@ -697,21 +698,21 @@ app.post("/webhook", async (req, res) => {
       if (error) console.error("[reminder] Supabase INSERT error:", JSON.stringify(error));
       return await respond(
         !error
-          ? `Reminder set for ${formatTimeDisplay(time)}.`
-          : "Failed to save reminder. Please try again."
+          ? `Recordatorio programado para las ${formatTimeDisplay(time)}.`
+          : "No se pudo guardar el recordatorio. Intenta de nuevo."
       );
     }
 
     if (intent === "interval_reminder") {
       const intervalMins = parseInt(aiResult.intervalMinutes);
       const durationHrs = parseInt(aiResult.durationHours) || 8;
-      const task = taskOrMessage || "reminder";
+      const task = taskOrMessage || "recordatorio";
 
       if (!intervalMins || intervalMins < 1) {
-        return await respond("Please specify how often — e.g. every 30 minutes.");
+        return await respond("Indica cada cuánto — por ejemplo, cada 30 minutos.");
       }
       if (intervalMins < 5) {
-        return await respond("Minimum interval is 5 minutes.");
+        return await respond("El intervalo mínimo es de 5 minutos.");
       }
 
       const now = new Date();
@@ -730,42 +731,42 @@ app.post("/webhook", async (req, res) => {
       }
 
       if (rows.length === 0) {
-        return await respond("No reminders could be scheduled in that window.");
+        return await respond("No se pudieron programar recordatorios en ese intervalo de tiempo.");
       }
 
       const { error } = await supabase.from("personal_reminders").insert(rows);
       return await respond(
         !error
-          ? `Every ${intervalMins} min reminder set for "${task}" — ${rows.length} alerts over the next ${durationHrs} hours.`
-          : "Failed to save interval reminder. Please try again."
+          ? `Recordatorio cada ${intervalMins} min configurado para "${task}" — ${rows.length} alertas en las próximas ${durationHrs} horas.`
+          : "No se pudo guardar el recordatorio por intervalo. Intenta de nuevo."
       );
     }
 
-    await respond("Request not understood. Please rephrase.");
+    await respond("No entendí la solicitud. Reformula por favor.");
   } catch (err) {
-    console.error("[webhook] Routing error:", err);
-    await respond("Internal error. Please try again.");
+    console.error("[webhook] Error de enrutado:", err);
+    await respond("Error interno. Intenta de nuevo.");
   }
 });
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log(`[server] Manvi v${version} running on port ${process.env.PORT || 3000}`);
+  console.log(`[server] Manvi v${version} en ejecución en el puerto ${process.env.PORT || 3000}`);
 
   // Self-Pinging Keep-Alive (prevents Render sleep)
   const PUBLIC_URL = process.env.PUBLIC_URL;
   if (PUBLIC_URL) {
-    console.log(`[keep-alive] Self-pinging enabled for ${PUBLIC_URL}`);
+    console.log(`[keep-alive] Auto-ping activado para ${PUBLIC_URL}`);
     const axios = require("axios");
     setInterval(async () => {
       try {
         await axios.get(`${PUBLIC_URL}/api/ping`);
-        console.log(`[keep-alive] Heartbeat sent to ${PUBLIC_URL}`);
+        console.log(`[keep-alive] Latido enviado a ${PUBLIC_URL}`);
       } catch (err) {
-        console.warn(`[keep-alive] Self-ping warning: ${err.message}`);
+        console.warn(`[keep-alive] Aviso de auto-ping: ${err.message}`);
       }
     }, 10 * 60 * 1000); // Every 10 minutes
   } else {
-    console.warn("[keep-alive] WARNING: PUBLIC_URL not set. The bot may go to sleep if inactive.");
-    console.warn("[keep-alive] Add PUBLIC_URL to your .env to enable self-pinging.");
+    console.warn("[keep-alive] AVISO: PUBLIC_URL no está definido. El bot puede entrar en reposo si no hay actividad.");
+    console.warn("[keep-alive] Añade PUBLIC_URL en tu .env para activar el auto-ping.");
   }
 });
