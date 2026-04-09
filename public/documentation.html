@@ -1,24 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Documentation | Manvi</title>
-  <meta name="description" content="Official documentation for Manvi. Learn how to self-host, configure, and use your personal AI WhatsApp assistant.">
+  <title>Documentación | Manvi</title>
+  <meta name="description" content="Documentación de Manvi: arquitectura con Twilio, Supabase, Gemini y búsqueda web. Autohospedaje, variables de entorno y uso del asistente por WhatsApp.">
   <meta name="robots" content="index, follow">
-  <meta name="author" content="Viswanath Bodasakurthi | OneMark">
+  <meta name="author" content="Sergio">
 
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://manvi.onrender.com/documentation">
-  <meta property="og:title" content="Documentation | Manvi">
-  <meta property="og:description" content="Official documentation for Manvi. Learn how to self-host, configure, and use your personal AI WhatsApp assistant.">
-  <meta property="og:image" content="https://manvi.onrender.com/preview-image.jpg">
-  
+  <meta property="og:title" content="Documentación | Manvi">
+  <meta property="og:description" content="Guía en español: Twilio WhatsApp, Supabase, IA (Gemini, Groq, OpenRouter) y Tavily + Serper.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Documentation | Manvi">
-  <meta name="twitter:description" content="Learn how to self-host and configure your Manvi instance.">
-  <meta name="twitter:image" content="https://manvi.onrender.com/preview-image.jpg">
+  <meta name="twitter:title" content="Documentación | Manvi">
+  <meta name="twitter:description" content="Configura y usa tu asistente personal por WhatsApp.">
 
   <link rel="icon" type="image/png" href="/assets/favicon-onemark/favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/assets/favicon-onemark/favicon.svg" />
@@ -452,11 +448,11 @@
       Manvi
     </a>
     <div class="doc-header-divider"></div>
-    <span class="doc-header-title">Documentation</span>
+    <span class="doc-header-title">Documentación</span>
     <div class="doc-header-right">
-      <a href="/">Home</a>
-      <a href="/status">Status</a>
-      <a href="https://github.com/viswabnath/whatsapp-reminder-bot" target="_blank" class="github-btn">
+      <a href="/">Inicio</a>
+      <a href="/status">Estado</a>
+      <a href="https://github.com/sergioesv/whatsapp-reminder-bot" target="_blank" class="github-btn" rel="noopener noreferrer">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
         GitHub
       </a>
@@ -469,57 +465,57 @@
     <nav class="sidebar">
 
       <div class="sidebar-section">
-        <div class="sidebar-section-title">Getting started</div>
+        <div class="sidebar-section-title">Primeros pasos</div>
         <ul class="sidebar-links">
-          <li><a href="#introduction" class="active">Introduction</a></li>
-          <li><a href="#prerequisites">Prerequisites</a></li>
-          <li><a href="#quickstart">Quick start</a></li>
+          <li><a href="#introduction" class="active">Introducción</a></li>
+          <li><a href="#prerequisites">Requisitos</a></li>
+          <li><a href="#quickstart">Inicio rápido</a></li>
         </ul>
       </div>
 
       <div class="sidebar-section">
-        <div class="sidebar-section-title">Configuration</div>
+        <div class="sidebar-section-title">Configuración</div>
         <ul class="sidebar-links">
-          <li><a href="#env-vars">Environment variables</a></li>
-          <li><a href="#database">Database setup</a></li>
-          <li><a href="#meta-webhook">Meta webhook</a></li>
+          <li><a href="#env-vars">Variables de entorno</a></li>
+          <li><a href="#database">Base de datos</a></li>
+          <li><a href="#twilio-webhook">Twilio (WhatsApp)</a></li>
         </ul>
       </div>
 
       <div class="sidebar-section">
-        <div class="sidebar-section-title">Features</div>
+        <div class="sidebar-section-title">Funciones</div>
         <ul class="sidebar-links">
-          <li><a href="#reminders">Reminders</a></li>
-          <li><a href="#routines">Daily routines</a></li>
-          <li><a href="#interval-reminders">Interval reminders</a></li>
-          <li><a href="#recurring">Weekly &amp; monthly</a></li>
-          <li><a href="#edit-task">Edit &amp; undo</a></li>
-          <li><a href="#memory">Conversational memory</a></li>
-          <li><a href="#events">Birthdays &amp; events</a></li>
-          <li><a href="#contacts">Contacts &amp; messaging</a></li>
-          <li><a href="#search">Web search</a></li>
-          <li><a href="#delete">Deleting tasks</a></li>
-          <li><a href="#chat">Conversational chat</a></li>
-          <li><a href="#media">Media handling</a></li>
+          <li><a href="#reminders">Recordatorios</a></li>
+          <li><a href="#routines">Rutinas diarias</a></li>
+          <li><a href="#interval-reminders">Recordatorios por intervalo</a></li>
+          <li><a href="#recurring">Semanales y mensuales</a></li>
+          <li><a href="#edit-task">Editar y deshacer</a></li>
+          <li><a href="#memory">Memoria conversacional</a></li>
+          <li><a href="#events">Cumpleaños y eventos</a></li>
+          <li><a href="#contacts">Contactos y mensajes</a></li>
+          <li><a href="#search">Búsqueda web</a></li>
+          <li><a href="#delete">Eliminar tareas</a></li>
+          <li><a href="#chat">Chat con la IA</a></li>
+          <li><a href="#media">Notas de voz y archivos</a></li>
         </ul>
       </div>
 
       <div class="sidebar-section">
-        <div class="sidebar-section-title">Deployment</div>
+        <div class="sidebar-section-title">Despliegue</div>
         <ul class="sidebar-links">
-          <li><a href="#render">Deploy to Render</a></li>
-          <li><a href="#keepalive">Keep-alive setup</a></li>
-          <li><a href="#testing">Testing locally</a></li>
+          <li><a href="#deploy">Railway / Render</a></li>
+          <li><a href="#keepalive">Mantener activo</a></li>
+          <li><a href="#testing">Pruebas locales</a></li>
         </ul>
       </div>
 
       <div class="sidebar-section">
-        <div class="sidebar-section-title">Reference</div>
+        <div class="sidebar-section-title">Referencia</div>
         <ul class="sidebar-links">
-          <li><a href="#ai-waterfall">AI waterfall</a></li>
-          <li><a href="#api-endpoints">API endpoints</a></li>
-          <li><a href="#limits">Usage limits</a></li>
-          <li><a href="#troubleshooting">Troubleshooting</a></li>
+          <li><a href="#ai-waterfall">Cadena de IA</a></li>
+          <li><a href="#api-endpoints">API HTTP</a></li>
+          <li><a href="#limits">Límites de uso</a></li>
+          <li><a href="#troubleshooting">Solución de problemas</a></li>
         </ul>
       </div>
 
@@ -530,107 +526,108 @@
 
       <!-- INTRODUCTION -->
       <div class="doc-section" id="introduction">
-        <h1>Introduction</h1>
-        <p class="lead">Manvi is a personal AI assistant that operates entirely inside WhatsApp. Send a message in plain English — she understands your intent, executes the action, and responds instantly. No app to install, no account to create beyond your existing WhatsApp.</p>
+        <h1>Introducción</h1>
+        <p class="lead">Manvi es un asistente personal por <strong>WhatsApp</strong> usando <strong>Twilio</strong>. Escribes en español (o mezclado); el bot entiende la intención con <strong>Gemini</strong> (y respaldos), guarda datos en <strong>Supabase</strong> y responde por el mismo canal.</p>
 
-        <p>Manvi is self-hosted. You run your own instance on Render, connect it to your own Meta WhatsApp Business account, and the only data that touches a third-party service is your API calls to Gemini, Groq, and your Supabase database.</p>
+        <p>Es un proyecto <strong>autohospedado</strong>: tú despliegas el servidor (por ejemplo <strong>Railway</strong> o <strong>Render</strong>), configuras las APIs y las variables de entorno. Los proveedores externos que usa este código son: <strong>Twilio</strong> (mensajes), <strong>Supabase</strong> (PostgreSQL), <strong>Google AI (Gemini)</strong>, <strong>Groq</strong> y <strong>OpenRouter</strong> (IA opcional en cascada), <strong>Tavily</strong> y <strong>Serper</strong> (búsqueda web).</p>
 
         <div class="callout">
-          <div class="callout-title">Who this is for</div>
-          <p>Manvi is designed for a single owner — you. It is not a multi-tenant service. All personal data (reminders, contacts, events) is private to the WhatsApp number you configure as <code>MY_PHONE_NUMBER</code>.</p>
+          <div class="callout-title">Para quién es</div>
+          <p>Diseñado para <strong>un solo dueño</strong>. No es multi‑inquilino. Recordatorios, contactos y eventos quedan asociados al número que configures en <code>MY_PHONE_NUMBER</code> y a tu cuenta de Twilio/Supabase.</p>
         </div>
 
-        <h3>What Manvi can do in v1.1.1</h3>
+        <h3>Capacidades principales</h3>
         <div class="feat-list">
-          <div class="feat-item"><div class="feat-item-title">⏰ Reminders</div><div class="feat-item-desc">One-off reminders at a specific time or on a future date. Vague times like "morning" or "evening" are resolved automatically.</div></div>
-          <div class="feat-item"><div class="feat-item-title">🔁 Daily Routines</div><div class="feat-item-desc">Recurring tasks at a fixed time, every day indefinitely.</div></div>
-          <div class="feat-item"><div class="feat-item-title">📅 Weekly &amp; Monthly Recurring</div><div class="feat-item-desc">Reminders on a specific day of the week or day of the month — every Tuesday, the 1st of every month, etc.</div></div>
-          <div class="feat-item"><div class="feat-item-title">✏️ Edit &amp; Undo</div><div class="feat-item-desc">Correct the last reminder with a follow-up — "Actually make that 6 PM" updates it in place.</div></div>
-          <div class="feat-item"><div class="feat-item-title">🧠 Conversational Memory</div><div class="feat-item-desc">Manvi remembers the last 4 messages, enabling natural follow-up questions without repeating context.</div></div>
-          <div class="feat-item"><div class="feat-item-title">🎂 Birthdays &amp; Events</div><div class="feat-item-desc">Save once, get reminded every year with advance alerts.</div></div>
-          <div class="feat-item"><div class="feat-item-title">📇 Contacts &amp; Messaging</div><div class="feat-item-desc">Save contacts and forward messages by name.</div></div>
-          <div class="feat-item"><div class="feat-item-title">🔍 Web Search</div><div class="feat-item-desc">Real-time web search via Tavily with Serper fallback. Results formatted for WhatsApp.</div></div>
-          <div class="feat-item"><div class="feat-item-title">💬 Conversational AI</div><div class="feat-item-desc">4-tier AI waterfall for general questions and chat.</div></div>
-          <div class="feat-item"><div class="feat-item-title">🗑 Delete Tasks</div><div class="feat-item-desc">Delete any reminder, routine, recurring task, or event by name.</div></div>
-          <div class="feat-item"><div class="feat-item-title">🎤 Media Handling</div><div class="feat-item-desc">Voice notes, images, and other media get a clear "text only" reply instead of silently failing.</div></div>
-          <div class="feat-item"><div class="feat-item-title">🩺 Health Tracking</div><div class="feat-item-desc">Visual 90-day uptime history with downtime detection (Red/Green) and "Last Run" tracking for all background jobs.</div></div>
-          <div class="feat-item"><div class="feat-item-title">⚡️ Keep-Alive</div><div class="feat-item-desc">Built-in self-pinging mechanism to prevent hosting platforms from sleeping.</div></div>
+          <div class="feat-item"><div class="feat-item-title">⏰ Recordatorios</div><div class="feat-item-desc">Puntuales con hora y, si aplica, fecha. Tiempos vagos (mañana, tarde, noche) los resuelve la IA según reglas del prompt.</div></div>
+          <div class="feat-item"><div class="feat-item-title">🔁 Rutinas diarias</div><div class="feat-item-desc">Misma hora todos los días hasta que las borres.</div></div>
+          <div class="feat-item"><div class="feat-item-title">📅 Semanales y mensuales</div><div class="feat-item-desc">Día de la semana o día del mes con hora fija.</div></div>
+          <div class="feat-item"><div class="feat-item-title">✏️ Editar</div><div class="feat-item-desc">Corrige un recordatorio pendiente con un mensaje de seguimiento.</div></div>
+          <div class="feat-item"><div class="feat-item-title">🧠 Memoria</div><div class="feat-item-desc">Los últimos 4 intercambios (usuario + bot) se envían a la IA como contexto.</div></div>
+          <div class="feat-item"><div class="feat-item-title">🎂 Eventos</div><div class="feat-item-desc">Cumpleaños y fechas especiales con avisos programados por el planificador.</div></div>
+          <div class="feat-item"><div class="feat-item-title">📇 Contactos</div><div class="feat-item-desc">Agenda y reenvío de mensajes a contactos guardados.</div></div>
+          <div class="feat-item"><div class="feat-item-title">🔍 Búsqueda web</div><div class="feat-item-desc"><strong>Tavily</strong> primero; si falla o sin cupo, <strong>Serper</strong>. Resumen orientado a WhatsApp.</div></div>
+          <div class="feat-item"><div class="feat-item-title">💬 Chat</div><div class="feat-item-desc">Preguntas generales por la misma cascada de modelos (cuota diaria limitada en código).</div></div>
+          <div class="feat-item"><div class="feat-item-title">🗑 Eliminar</div><div class="feat-item-desc">Borra recordatorios, rutinas, recurrentes o eventos por nombre aproximado.</div></div>
+          <div class="feat-item"><div class="feat-item-title">🎤 Medios</div><div class="feat-item-desc">Solo se procesa el texto de <code>Body</code>. Notas de voz o adjuntos sin texto suelen ignorarse (sin transcripción integrada).</div></div>
+          <div class="feat-item"><div class="feat-item-title">🩺 Panel de estado</div><div class="feat-item-desc">Uso de APIs, jobs en segundo plano y health en <code>/status</code> y <code>/api/status</code>.</div></div>
+          <div class="feat-item"><div class="feat-item-title">⚡️ Auto‑ping</div><div class="feat-item-desc">Con <code>PUBLIC_URL</code>, el servidor se hace ping a <code>/api/ping</code> para reducir que el PaaS duerma el proceso.</div></div>
         </div>
       </div>
 
       <!-- PREREQUISITES -->
       <div class="doc-section" id="prerequisites">
-        <h2>Prerequisites</h2>
-        <p>Before you start, create accounts on these services. All free tiers are sufficient.</p>
+        <h2>Requisitos</h2>
+        <p>Cuentas y claves que utiliza <strong>esta</strong> versión del código. Los planes gratuitos suelen bastar para desarrollo y uso moderado (revisa cupos actuales en cada sitio).</p>
 
         <table class="doc-table">
-          <thead><tr><th>Service</th><th>What it's for</th><th>Link</th></tr></thead>
+          <thead><tr><th>Servicio</th><th>Para qué</th><th>Enlace</th></tr></thead>
           <tbody>
-            <tr><td><strong>Meta for Developers</strong></td><td>WhatsApp Business API — sending and receiving messages</td><td><a href="https://developers.facebook.com" target="_blank">developers.facebook.com</a></td></tr>
-            <tr><td><strong>Supabase</strong></td><td>PostgreSQL database — stores all your reminders, contacts, events</td><td><a href="https://supabase.com" target="_blank">supabase.com</a></td></tr>
-            <tr><td><strong>Google AI Studio</strong></td><td>Gemini API key (Tier 1 &amp; 2 AI)</td><td><a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a></td></tr>
-            <tr><td><strong>Groq</strong></td><td>Llama 3 API key (Tier 3 AI fallback)</td><td><a href="https://console.groq.com" target="_blank">console.groq.com</a></td></tr>
-            <tr><td><strong>OpenRouter</strong></td><td>GPT-4o-mini (Tier 4 AI fallback — minimal paid usage)</td><td><a href="https://openrouter.ai" target="_blank">openrouter.ai</a></td></tr>
-            <tr><td><strong>Tavily</strong></td><td>Web search (primary)</td><td><a href="https://www.tavily.com" target="_blank">tavily.com</a></td></tr>
-            <tr><td><strong>Serper</strong></td><td>Web search fallback</td><td><a href="https://serper.dev" target="_blank">serper.dev</a></td></tr>
-            <tr><td><strong>Render</strong></td><td>Hosting — free web service tier</td><td><a href="https://render.com" target="_blank">render.com</a></td></tr>
+            <tr><td><strong>Twilio</strong></td><td>WhatsApp vía Messaging API: envío y recepción; número remitente y credenciales <code>SID</code> / <code>TOKEN</code></td><td><a href="https://www.twilio.com" target="_blank" rel="noopener noreferrer">twilio.com</a></td></tr>
+            <tr><td><strong>Supabase</strong></td><td>Base PostgreSQL: recordatorios, contactos, logs, uso de API</td><td><a href="https://supabase.com" target="_blank" rel="noopener noreferrer">supabase.com</a></td></tr>
+            <tr><td><strong>Google AI Studio</strong></td><td>Clave <code>GEMINI_API_KEY</code> (modelos Gemini 2.5 / 1.5 Flash en cascada)</td><td><a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer">aistudio.google.com</a></td></tr>
+            <tr><td><strong>Groq</strong></td><td>Opcional: reserva Llama 3.3 si Gemini no está disponible</td><td><a href="https://console.groq.com" target="_blank" rel="noopener noreferrer">console.groq.com</a></td></tr>
+            <tr><td><strong>OpenRouter</strong></td><td>Opcional: último escalón (p. ej. GPT‑4o-mini)</td><td><a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">openrouter.ai</a></td></tr>
+            <tr><td><strong>Tavily</strong></td><td>Búsqueda web principal</td><td><a href="https://www.tavily.com" target="_blank" rel="noopener noreferrer">tavily.com</a></td></tr>
+            <tr><td><strong>Serper</strong></td><td>Reserva de búsqueda web</td><td><a href="https://serper.dev" target="_blank" rel="noopener noreferrer">serper.dev</a></td></tr>
+            <tr><td><strong>Railway / Render u otro</strong></td><td>Servidor Node expuesto a internet para el webhook <code>POST /webhook</code></td><td><a href="https://railway.app" target="_blank" rel="noopener noreferrer">railway.app</a>, <a href="https://render.com" target="_blank" rel="noopener noreferrer">render.com</a></td></tr>
           </tbody>
         </table>
       </div>
 
       <!-- QUICKSTART -->
       <div class="doc-section" id="quickstart">
-        <h2>Quick start</h2>
-        <h3>1. Fork and clone the repo</h3>
-        <pre><code><span class="code-green">git clone</span> https://github.com/viswabnath/whatsapp-reminder-bot
-<span class="code-green">cd</span> manvi-whatsapp-assistant
+        <h2>Inicio rápido</h2>
+        <h3>1. Clonar el repositorio</h3>
+        <pre><code><span class="code-green">git clone</span> https://github.com/sergioesv/whatsapp-reminder-bot.git
+<span class="code-green">cd</span> whatsapp-reminder-bot
 <span class="code-green">npm install</span></code></pre>
 
-        <h3>2. Copy the environment file</h3>
+        <h3>2. Variables de entorno</h3>
         <pre><code><span class="code-green">cp</span> .env.example .env</code></pre>
-        <p>Open <code>.env</code> and fill in all required keys. See <a href="#env-vars">Environment variables</a> for the full list.</p>
+        <p>Edita <code>.env</code> con todas las claves necesarias. Lista detallada en <a href="#env-vars">Variables de entorno</a>.</p>
 
-        <h3>3. Set up the database</h3>
-        <p>In your Supabase project, open the <strong>SQL Editor</strong> and run the full schema. See <a href="#database">Database setup</a>.</p>
+        <h3>3. Base de datos</h3>
+        <p>En Supabase, <strong>SQL Editor</strong>: ejecuta el esquema de <a href="#database">Base de datos</a>. Si tu tabla <code>personal_reminders</code> es antigua, aplica también <code>sql/personal_reminders_add_group_name.sql</code>.</p>
 
-        <h3>4. Run locally</h3>
+        <h3>4. Ejecutar en local</h3>
         <pre><code><span class="code-green">npm run dev</span></code></pre>
-        <p>The server starts on <code>http://localhost:3000</code>. Your dashboard is at <code>http://localhost:3000/status</code>.</p>
+        <p>Servidor en <code>http://localhost:3000</code>. Panel en <code>http://localhost:3000/status</code>.</p>
 
-        <h3>5. Run the test suite</h3>
+        <h3>5. Pruebas</h3>
         <pre><code><span class="code-green">node test.js</span></code></pre>
-        <p>This validates all v1.1 features against your real Supabase instance and cleans up after itself.</p>
+        <p>Comprueba integración contra tu proyecto Supabase (requiere <code>.env</code> válido). No envía WhatsApp reales en los tests habituales.</p>
       </div>
 
       <!-- ENV VARS -->
       <div class="doc-section" id="env-vars">
-        <h2>Environment variables</h2>
-        <p>All secrets live in a <code>.env</code> file at the project root. Never commit this file.</p>
+        <h2>Variables de entorno</h2>
+        <p>Secretos en <code>.env</code> en la raíz del proyecto (o en el panel de tu PaaS). No subas <code>.env</code> al repositorio.</p>
 
         <table class="doc-table">
-          <thead><tr><th>Variable</th><th>Description</th><th></th></tr></thead>
+          <thead><tr><th>Variable</th><th>Descripción</th><th></th></tr></thead>
           <tbody>
-            <tr><td><code>PORT</code></td><td>Port the Express server listens on. Render sets this automatically.</td><td></td></tr>
-            <tr><td><code>VERIFY_TOKEN</code></td><td>Any string you choose. Must match what you set in the Meta webhook config.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>MY_PHONE_NUMBER</code></td><td>Your WhatsApp number in international format, no <code>+</code>. E.g. <code>919876543210</code></td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>PHONE_NUMBER_ID</code></td><td>From Meta developer console → WhatsApp → API Setup.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>ACCESS_TOKEN</code></td><td>Meta permanent access token. Generate one from the Meta developer portal.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>SUPABASE_URL</code></td><td>Your Supabase project URL. Found in Project Settings → API.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>SUPABASE_KEY</code></td><td>Supabase <code>anon</code> public key. Found in Project Settings → API.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>GEMINI_API_KEY</code></td><td>From <a href="https://aistudio.google.com" target="_blank">Google AI Studio</a>. Used for Tier 1 &amp; 2 AI.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>GROQ_API_KEY</code></td><td>From <a href="https://console.groq.com" target="_blank">Groq console</a>. Used for Tier 3 AI fallback.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>OPENROUTER_API_KEY</code></td><td>From <a href="https://openrouter.ai" target="_blank">OpenRouter</a>. Used for Tier 4 AI fallback.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>TAVILY_API_KEY</code></td><td>From <a href="https://www.tavily.com" target="_blank">Tavily</a>. Primary web search provider.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>SERPER_API_KEY</code></td><td>From <a href="https://serper.dev" target="_blank">Serper.dev</a>. Web search fallback.</td><td><span class="badge-required">required</span></td></tr>
-            <tr><td><code>PUBLIC_URL</code></td><td>Your application's public URL (e.g. <code>https://manvi.onrender.com</code>). Enables self-pinging keep-alive.</td><td><span>optional</span></td></tr>
+            <tr><td><code>PORT</code></td><td>Puerto HTTP. En Railway/Render suele inyectarse automáticamente; si no, por defecto <code>3000</code>.</td><td></td></tr>
+            <tr><td><code>TWILIO_ACCOUNT_SID</code></td><td>Identificador de cuenta Twilio (consola Twilio).</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>TWILIO_AUTH_TOKEN</code></td><td>Token de autenticación Twilio.</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>TWILIO_WHATSAPP_NUMBER</code></td><td>Número de WhatsApp de Twilio, formato <code>whatsapp:+57...</code> o el que te asigne el sandbox.</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>MY_PHONE_NUMBER</code></td><td>Tu móvil en formato internacional <strong>sin</strong> <code>+</code>. Ej.: <code>573001234567</code>. Marca al dueño en la lógica del bot.</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>SUPABASE_URL</code></td><td>URL del proyecto → Ajustes → API.</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>SUPABASE_KEY</code></td><td>Clave que usa <code>src/supabase.js</code> (según tu política RLS: a menudo <code>service_role</code> en bots servidor, o <code>anon</code> si las políticas lo permiten).</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>GEMINI_API_KEY</code></td><td><a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer">Google AI Studio</a>. Primera opción de IA.</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>GROQ_API_KEY</code></td><td><a href="https://console.groq.com" target="_blank" rel="noopener noreferrer">Groq</a>. Opcional: si falta, ese escalón se omite.</td><td><span>opcional</span></td></tr>
+            <tr><td><code>OPENROUTER_API_KEY</code></td><td><a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">OpenRouter</a>. Opcional: último escalón.</td><td><span>opcional</span></td></tr>
+            <tr><td><code>TAVILY_API_KEY</code></td><td><a href="https://www.tavily.com" target="_blank" rel="noopener noreferrer">Tavily</a>. Búsqueda principal.</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>SERPER_API_KEY</code></td><td><a href="https://serper.dev" target="_blank" rel="noopener noreferrer">Serper</a>. Reserva de búsqueda.</td><td><span class="badge-required">obligatoria</span></td></tr>
+            <tr><td><code>PUBLIC_URL</code></td><td>URL pública, p. ej. <code>https://tu-app.up.railway.app</code> (sin barra final). Activa el auto‑ping cada 10 min a <code>/api/ping</code>.</td><td><span>opcional</span></td></tr>
           </tbody>
         </table>
       </div>
 
       <!-- DATABASE -->
       <div class="doc-section" id="database">
-        <h2>Database setup</h2>
-        <p>Run this SQL in the Supabase SQL Editor once. It creates all 7 tables from scratch.</p>
+        <h2>Base de datos (Supabase)</h2>
+        <p>Ejecuta este SQL una vez en el <strong>SQL Editor</strong> de Supabase. Crea las tablas que usa el código (<code>contacts</code>, <code>personal_reminders</code> con <code>group_name</code>, <code>daily_routines</code>, <code>recurring_tasks</code>, <code>special_events</code>, <code>interaction_logs</code>, <code>api_usage</code>, <code>system_jobs</code>).</p>
+        <p>Si ya tenías <code>personal_reminders</code> sin <code>group_name</code>, corre además el script del repo: <code>sql/personal_reminders_add_group_name.sql</code>.</p>
 
         <pre><span class="pre-label">SQL</span><code><span class="code-comment">-- Contacts address book</span>
 <span class="code-kw">CREATE TABLE</span> contacts (
@@ -720,303 +717,274 @@
     (<span class="code-str">'Event Alert'</span>, <span class="code-str">'active'</span>)
 <span class="code-kw">ON CONFLICT</span> (job_name) <span class="code-kw">DO NOTHING</span>;</code></pre>
       </div>
-      <!-- META WEBHOOK -->
-      <div class="doc-section" id="meta-webhook">
-        <h2>Meta webhook setup</h2>
-        <p>In the Meta developer portal, go to your app → WhatsApp → Configuration.</p>
+      <!-- TWILIO WEBHOOK -->
+      <div class="doc-section" id="twilio-webhook">
+        <h2>Twilio y WhatsApp</h2>
+        <p>El webhook de este proyecto es <strong>HTTP POST</strong> en la ruta <code>/webhook</code> (mismo servidor que sirve la web). Twilio envía el cuerpo del formulario con al menos <code>Body</code>, <code>From</code> y <code>To</code>.</p>
         <ol>
-          <li>Set <strong>Webhook URL</strong> to <code>https://your-app.onrender.com/webhook</code></li>
-          <li>Set <strong>Verify token</strong> to the same value as your <code>VERIFY_TOKEN</code> env var</li>
-          <li>Subscribe to the <strong>messages</strong> webhook field</li>
-          <li>Add your phone number as a test recipient in the API Setup section</li>
+          <li>En <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer">Consola Twilio</a>, abre tu número de WhatsApp o el <strong>Sandbox</strong> de WhatsApp.</li>
+          <li>Configura <strong>When a message comes in</strong> con la URL <code>https://TU_DOMINIO_PUBLICO/webhook</code> y método <code>HTTP POST</code>.</li>
+          <li>Asegúrate de que las variables <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code> y <code>TWILIO_WHATSAPP_NUMBER</code> coincidan con ese entorno.</li>
+          <li>El bot responde con el mismo canal usando <code>src/sendMessage.js</code> (API de mensajes de Twilio).</li>
         </ol>
         <div class="callout-warn callout">
-          <div class="callout-title">Permanent access token</div>
-          <p>The default access token from Meta expires in 24 hours. Generate a permanent token via the <strong>System User</strong> flow in Meta Business Manager. Use that token as <code>ACCESS_TOKEN</code>.</p>
+          <div class="callout-title">No es la API de Meta Graph</div>
+          <p>Esta rama del proyecto <strong>no</strong> usa <code>PHONE_NUMBER_ID</code> ni <code>ACCESS_TOKEN</code> de Meta. Si tu documentación antigua mencionaba Meta, sustitúyelo por la configuración de Twilio anterior.</p>
         </div>
       </div>
 
       <!-- FEATURES -->
       <div class="doc-section" id="reminders">
-        <h2>Reminders</h2>
-        <p>Set a one-off reminder in plain English. Manvi extracts the time and optional date, saves it with a full timezone-aware timestamp, and fires it via WhatsApp at the right moment.</p>
-        <h3>Example messages</h3>
-        <pre><code>Remind me to call the bank at 3 PM
-Remind me in 20 minutes to check the oven
-5th April is Ravi's interview, remind me at 9 AM on that day</code></pre>
-        <h3>How time is resolved</h3>
+        <h2>Recordatorios puntuales</h2>
+        <p>Escribe en lenguaje natural. La IA (CERO en el prompt) devuelve JSON con hora y, si aplica, fecha; el servidor guarda <code>reminder_time</code> con zona <strong>America/Bogota</strong> y el planificador envía el mensaje por Twilio cuando toca.</p>
+        <h3>Ejemplos</h3>
+        <pre><code>Recuérdame llamar al banco a las 3 de la tarde
+En 20 minutos recuérdame revisar el horno
+El 5 de abril tengo entrevista, recuérdame a las 9:00</code></pre>
+        <h3>Cómo se resuelve la hora</h3>
         <ul>
-          <li>Relative times ("in 20 minutes") — the AI calculates the exact IST timestamp from the current time</li>
-          <li>Future dates with time ("5th April at 9 AM") — stored as a full TIMESTAMPTZ, fires once and is marked complete</li>
-          <li>Time only with no date ("at 3 PM") — defaults to today, rolls to tomorrow if the time has already passed</li>
+          <li><strong>Relativo</strong> (“en 20 minutos”): la IA calcula <code>HH:MM:SS</code> según la hora actual en Colombia indicada en el prompt.</li>
+          <li><strong>Fecha + hora</strong>: se guarda un instante concreto en base de datos.</li>
+          <li><strong>Solo hora</strong>: se usa el día actual en Bogotá; si esa hora ya pasó, se mueve al día siguiente (<code>buildReminderDate</code>).</li>
+          <li><strong>Fecha en el JSON sin evidencia en el texto</strong>: el servidor puede descartar fechas muy lejanas para evitar alucinaciones; conviene nombrar el día en el mensaje.</li>
         </ul>
         <div class="callout">
-          <div class="callout-title">Timezone</div>
-          <p>All times are IST (Asia/Kolkata, UTC+5:30). The scheduler runs every minute and compares against the current IST timestamp.</p>
+          <div class="callout-title">Zona horaria</div>
+          <p>Recordatorios, rutinas y eventos especiales usan <strong>America/Bogota (COT, −05:00)</strong> en el código del planificador y en <code>buildReminderDate</code>.</p>
         </div>
       </div>
 
       <div class="doc-section" id="routines">
-        <h2>Daily routines</h2>
-        <p>Routines repeat at the same time every day with no end date. They run at a fixed clock time (e.g. 9:00 AM every day) until you delete them.</p>
-        <p>For repeating alerts spaced by minutes or hours, see <a href="#interval-reminders">Interval reminders</a>.</p>
-        <pre><code>Remind me to drink water every day at 10 AM
-Set a daily reminder to check email at 9 AM</code></pre>
-        <p>To stop a routine, delete it by name: <em>"Delete drink water routine"</em></p>
+        <h2>Rutinas diarias</h2>
+        <p>Misma hora de reloj todos los días, sin fecha de fin. Van en la tabla <code>daily_routines</code>.</p>
+        <p>Para repeticiones cada X minutos dentro de un tramo horario, usa <a href="#interval-reminders">recordatorios por intervalo</a>.</p>
+        <pre><code>Recuérdame beber agua todos los días a las 10:00
+Rutina diaria revisar el correo a las 9:00</code></pre>
+        <p>Para quitarla: <em>“Elimina la rutina de beber agua”</em> (o similar).</p>
       </div>
 
       <div class="doc-section" id="interval-reminders">
-        <h2>Interval reminders</h2>
-        <p>Repeat an alert every X minutes or hours within a set window. Useful for hydration reminders, medication, stretch breaks, or anything that needs nudging throughout the day.</p>
-        <h3>Example messages</h3>
-        <pre><code>Remind me every 30 minutes to drink water
-Every 1 hour remind me to stretch for the next 4 hours
-Remind me every 15 mins to check on the oven for 2 hours</code></pre>
-        <h3>How it works</h3>
+        <h2>Recordatorios por intervalo</h2>
+        <p>Varias alertas espaciadas (mínimo 5 minutos entre sí) dentro de una ventana en horas (por defecto 8 h). Se insertan varias filas en <code>personal_reminders</code> con <code>group_name = 'interval'</code>.</p>
+        <h3>Ejemplos</h3>
+        <pre><code>Recuérdame cada 30 minutos tomar agua
+Cada hora recuérdame estirar durante las próximas 4 horas</code></pre>
+        <h3>Funcionamiento</h3>
         <ul>
-          <li><strong>intervalMinutes</strong> — how often the alert fires. Minimum 5 minutes.</li>
-          <li><strong>durationHours</strong> — how long to keep repeating. Defaults to 8 hours if not specified.</li>
-          <li>Manvi pre-schedules all alerts as individual rows in <code>personal_reminders</code>, so the existing scheduler picks them up automatically — no new cron job needed.</li>
+          <li><strong>intervalMinutes</strong> — frecuencia. Mínimo 5.</li>
+          <li><strong>durationHours</strong> — duración de la ventana; por defecto 8 si no viene en el JSON.</li>
+          <li>El cron de recordatorios (cada minuto) ya procesa esas filas igual que las puntuales.</li>
         </ul>
-        <h3>Viewing them</h3>
-        <pre><code>What are my reminders?</code></pre>
-        <p>Interval reminders appear in a separate group showing count remaining and next fire time per task.</p>
-        <h3>Cancelling them</h3>
-        <pre><code>Delete the drink water reminder
-Stop drink water intervals</code></pre>
-        <p>All pending alerts for that task are deleted in one shot — you do not need to delete them one by one.</p>
+        <h3>Verlos</h3>
+        <pre><code>¿Qué recordatorios tengo?</code></pre>
+        <p>Los de intervalo aparecen agrupados con cantidad pendiente y próxima hora.</p>
+        <h3>Cancelar</h3>
+        <pre><code>Elimina el recordatorio del agua</code></pre>
         <div class="callout">
-          <div class="callout-title">Different from routines</div>
-          <p>Routines repeat at the same fixed time every day forever. Interval reminders repeat within a window (default 8 hours) and stop. Use routines for habits, interval reminders for tasks you want nudged throughout the day.</p>
+          <div class="callout-title">Rutina vs intervalo</div>
+          <p>La rutina es siempre a la misma hora civil cada día. El intervalo es muchas notas dentro de unas horas y termina.</p>
         </div>
       </div>
 
       <div class="doc-section" id="events">
-        <h2>Birthdays &amp; events</h2>
-        <p>Special events are saved with a date and repeat every year. The year in the date is irrelevant after the first save — Manvi only matches day and month.</p>
-        <pre><code>22nd May is Manu's birthday
-Save Simhadri's farewell on 3rd April</code></pre>
-        <p>Manvi sends two alerts every year:</p>
-        <ul>
-          <li>Day before at 8:30 AM IST</li>
-          <li>The day itself at 8:30 AM IST</li>
-        </ul>
+        <h2>Cumpleaños y eventos</h2>
+        <p>Tabla <code>special_events</code>. El año puede servir para la primera carga; los avisos recurrentes los maneja el job de alertas.</p>
+        <pre><code>El 22 de mayo es el cumpleaños de Ana
+Guarda el aniversario de Luis el 3 de abril</code></pre>
+        <p>El planificador incluye un job (<strong>Event Alert</strong>) que refuerza alertas a las <strong>08:30</strong> hora Colombia según la lógica en <code>src/scheduler.js</code>.</p>
       </div>
 
       <div class="doc-section" id="contacts">
-        <h2>Contacts &amp; messaging</h2>
-        <p>Save a contact once. After that, address them by name in any instruction.</p>
-        <pre><code><span class="code-comment"># Save a contact</span>
-Save mom as 919876543210
-Add Ravi to contacts, number 919988776655
+        <h2>Contactos y mensajes</h2>
+        <p>Tabla <code>contacts</code>. Solo el dueño (<code>MY_PHONE_NUMBER</code>) puede guardar o listar agenda completa según la lógica actual.</p>
+        <pre><code><span class="code-comment"># Guardar</span>
+Guarda a mamá como 573001234567
 
-<span class="code-comment"># Send a message by name</span>
-Tell mom I'll be 10 minutes late
-Message Ravi and say the meeting is at 7</code></pre>
-        <p>Phone numbers must include the country code with no <code>+</code> or spaces. Manvi strips all non-digit characters automatically before saving.</p>
+<span class="code-comment"># Mensaje por nombre</span>
+Dile a mamá que llego en 10 minutos</code></pre>
+        <p>Número con prefijo país; el código normaliza quitando caracteres no numéricos al guardar.</p>
       </div>
 
       <div class="doc-section" id="search">
-        <h2>Web search</h2>
-        <p>Manvi searches the web and returns a clean plain-text summary. No links, no markdown — just the answer.</p>
-        <pre><code>Who won the IPL last season?
-What's the weather in Hyderabad today?
-Latest news about OpenAI</code></pre>
-        <p>Primary provider is Tavily (1,000 req/month free). If Tavily is exhausted, Serper is used automatically (2,500 req lifetime free). You are alerted at 50, 10, and 0 remaining on each.</p>
+        <h2>Búsqueda web</h2>
+        <p><code>src/search.js</code>: primero <strong>Tavily</strong>, si no hay resultado o clave, <strong>Serper</strong>. El resumen final lo genera de nuevo la cascada de IA sobre los resultados.</p>
+        <pre><code>¿Quién ganó el último torneo?
+Clima en Bogotá hoy
+Noticias recientes de …</code></pre>
+        <p>Los límites y avisos de cupo bajo están en <code>src/usage.js</code> y pueden notificarse por WhatsApp al dueño.</p>
       </div>
 
       <div class="doc-section" id="delete">
-        <h2>Deleting tasks</h2>
-        <p>Delete any reminder, routine, or event by describing it. You do not need to use the exact saved name.</p>
-        <pre><code>Delete the reminder to call the bank
-Delete drink water routine
-Remove Manu's birthday</code></pre>
-        <p>Manvi searches reminders first, then routines, then events. The first match found is deleted. If nothing matches, it says so.</p>
+        <h2>Eliminar tareas</h2>
+        <p>Intent <code>delete_task</code>: busca en recordatorios, rutinas, recurrentes y eventos (orden en código).</p>
+        <pre><code>Elimina el recordatorio del banco
+Borra la rutina del agua
+Quita el cumpleaños de Ana</code></pre>
       </div>
 
       <div class="doc-section" id="chat">
-        <h2>Conversational chat</h2>
-        <p>For anything that is not a task, Manvi responds directly using the AI waterfall. Ask questions, request explanations, or just talk.</p>
-        <pre><code>What do you have saved for me?
-Explain machine learning simply
-Tell me a joke</code></pre>
+        <h2>Chat con la IA</h2>
+        <p>Si no es una orden estructurada, el intent suele ser <code>chat</code> y la respuesta pasa por los modelos configurados en <code>src/gemini.js</code>.</p>
+        <pre><code>Explícame qué es una API
+Cuéntame un chiste</code></pre>
       </div>
 
       <div class="doc-section" id="recurring">
-        <h2>Weekly &amp; monthly recurring reminders</h2>
-        <p>For reminders that repeat on a specific day of the week or a specific day of the month — use weekly or monthly recurring tasks. These are stored separately from daily routines and have their own scheduler.</p>
-        <h3>Weekly</h3>
-        <pre><code>Remind me to take out the trash every Tuesday at 8 PM
-Every Friday at 6 PM remind me to submit my timesheet</code></pre>
-        <h3>Monthly</h3>
-        <pre><code>Remind me to pay rent on the 1st of every month at 9 AM
-On the 15th of every month remind me to check bank statement</code></pre>
+        <h2>Recordatorios semanales y mensuales</h2>
+        <p>Tabla <code>recurring_tasks</code>; cron separado en el planificador.</p>
+        <h3>Semanal</h3>
+        <pre><code>Cada martes a las 20:00 recuérdame sacar la basura</code></pre>
+        <h3>Mensual</h3>
+        <pre><code>El día 1 de cada mes a las 9:00 recuérdame pagar el arriendo</code></pre>
         <div class="callout">
-          <div class="callout-title">End of month edge case</div>
-          <p>If you set a monthly task for the 31st and the current month has fewer days, it fires on the last day of that month instead of being skipped.</p>
+          <div class="callout-title">Fin de mes</div>
+          <p>Si pides día 31 y el mes es más corto, el scheduler puede ajustar al último día del mes (comportamiento descrito en comentarios del proyecto).</p>
         </div>
-        <p>To stop a recurring task, delete it by name: <em>"Delete the pay rent reminder"</em></p>
       </div>
 
       <div class="doc-section" id="edit-task">
-        <h2>Edit &amp; undo</h2>
-        <p>Made a mistake on a reminder time? Just send a correction as a follow-up message. Manvi uses conversation history to identify which reminder you mean and updates it in place — no delete and recreate needed.</p>
-        <pre><code><span class="code-comment"># First set a reminder</span>
-Remind me to buy eggs at 5 PM
-
-<span class="code-comment"># Immediately correct it</span>
-Actually make that 6 PM
-Change the buy eggs reminder to 7 PM</code></pre>
+        <h2>Editar recordatorio</h2>
+        <p>Intent <code>edit_task</code>: localiza un recordatorio pendiente por texto parecido, borra la fila y crea otra con la nueva hora.</p>
+        <pre><code>Recuérdame comprar huevos a las 17:00
+Mejor a las 18:00 el de los huevos</code></pre>
         <div class="callout">
-          <div class="callout-title">Only works on pending reminders</div>
-          <p>Edit only targets one-off reminders that haven't fired yet. It does not edit daily routines, recurring tasks, or events. Use delete + recreate for those.</p>
+          <div class="callout-title">Solo pendientes puntuales</div>
+          <p>No sustituye editar rutinas diarias, recurrentes o eventos en bloque; ahí conviene borrar y crear de nuevo.</p>
         </div>
       </div>
 
       <div class="doc-section" id="memory">
-        <h2>Conversational memory</h2>
-        <p>Manvi reads the last 4 messages in your conversation before processing each new one. This lets you ask natural follow-up questions without repeating context.</p>
-        <pre><code><span class="code-comment"># Ask a question</span>
-Who won IPL 2024?
-
-<span class="code-comment"># Follow up without repeating the topic</span>
-Who was the winning captain?
-Where was the final held?</code></pre>
-        <p>Memory is scoped strictly to your own phone number — other users' history is never mixed in.</p>
+        <h2>Memoria conversacional</h2>
+        <p>Se leen hasta <strong>4</strong> pares (mensaje / respuesta) de <code>interaction_logs</code> para el mismo <code>sender_phone</code> antes de llamar a la IA.</p>
+        <pre><code>¿Quién ganó …?
+¿Y el capitán del equipo?</code></pre>
+        <p>El historial no se mezcla entre números distintos.</p>
       </div>
 
       <div class="doc-section" id="media">
-        <h2>Media handling</h2>
-        <p>Manvi only processes text messages. If you accidentally send a voice note, image, video, document, or sticker, she replies with a clear message instead of silently ignoring it.</p>
-        <pre><code><span class="code-comment"># Sending a voice note gets back:</span>
-I can only read text messages right now. I cannot process voice notes. Please type your request.</code></pre>
+        <h2>Notas de voz, imágenes y archivos</h2>
+        <p>El webhook solo usa <code>req.body.Body</code> como texto. Twilio puede enviar adjuntos (<code>NumMedia</code>, <code>MediaUrl0</code>…); <strong>este código no los descarga ni transcribe</strong>. Si mandas solo nota de voz, <code>Body</code> suele ir vacío y el servidor termina la petición sin contestar.</p>
+        <p>Para soportar voz hace falta integrar un servicio STT y ampliar el manejador del webhook.</p>
       </div>
 
       <!-- DEPLOYMENT -->
-      <div class="doc-section" id="render">
-        <h2>Deploy to Render</h2>
+      <div class="doc-section" id="deploy">
+        <h2>Despliegue (Railway, Render u otro PaaS)</h2>
+        <p>Necesitas un proceso Node accesible por HTTPS para que Twilio pueda hacer <code>POST</code> a <code>/webhook</>.</p>
+        <h3>Railway (ejemplo)</h3>
         <ol>
-          <li>Push your repo (with a filled <code>.env.example</code> but no <code>.env</code>) to GitHub</li>
-          <li>In Render, create a new <strong>Web Service</strong> → connect your GitHub repo</li>
-          <li>Set <strong>Build command</strong>: <code>npm install</code></li>
-          <li>Set <strong>Start command</strong>: <code>npm start</code></li>
-          <li>Add all environment variables in the Render <strong>Environment</strong> tab</li>
-          <li>Deploy. Your URL will be <code>https://your-app.onrender.com</code></li>
+          <li>Conecta el repo de GitHub al proyecto en <a href="https://railway.app" target="_blank" rel="noopener noreferrer">Railway</a>.</li>
+          <li>Comando de arranque: <code>npm start</code> (usa <code>src/server.js</code> según <code>package.json</code>).</li>
+          <li>Define todas las variables de la tabla <a href="#env-vars">Variables de entorno</a> en el panel (no subas <code>.env</code> al repo).</li>
+          <li>Asigna dominio público y copia la URL base a Twilio y a <code>PUBLIC_URL</code>.</li>
+        </ol>
+        <h3>Render (alternativa)</h3>
+        <ol>
+          <li>Nuevo <strong>Web Service</strong> desde el mismo repositorio.</li>
+          <li>Build: <code>npm install</code> (o el predeterminado). Start: <code>npm start</code>.</li>
+          <li>Mismas variables de entorno que en Railway.</li>
         </ol>
         <div class="callout">
-          <div class="callout-title">Free tier sleep</div>
-          <p>Render free instances sleep after 15 minutes of inactivity. Set up a keep-alive ping — see below.</p>
+          <div class="callout-title">Instancias que duermen</div>
+          <p>En planes gratuitos el contenedor puede apagarse sin tráfico. Usa <code>PUBLIC_URL</code> y/o un monitor externo que golpee <code>/api/ping</code>.</p>
         </div>
       </div>
 
       <div class="doc-section" id="keepalive">
-        <h2>Keep-alive &amp; uptime monitoring</h2>
-        <p>Render free instances sleep after 15 minutes of inactivity. To ensure your reminders fire on time even when you aren't using the bot, use one of these methods:</p>
-        
-        <h3>Method A: Self-Pinging (Recommended)</h3>
-        <p>Manvi has a built-in keep-alive mechanism. Simply add your app's public URL to your environment variables:</p>
-        <pre><code>PUBLIC_URL=https://your-app.onrender.com</code></pre>
-        <p>The server will now ping itself every 10 minutes, preventing Render from sleeping.</p>
+        <h2>Mantener el servicio activo y vigilancia</h2>
+        <h3>A: Auto‑ping (en el código)</h3>
+        <p>Si defines <code>PUBLIC_URL</code> con la URL pública de tu app, el servidor hace <code>GET</code> a <code>/api/ping</code> cada 10 minutos (axios).</p>
+        <pre><code>PUBLIC_URL=https://tu-servicio.up.railway.app</code></pre>
 
-        <h3>Method B: External Monitoring (UptimeRobot)</h3>
-        <p>Use <a href="https://uptimerobot.com" target="_blank">UptimeRobot</a> (free) for external verification and mobile push alerts if your bot goes down.</p>
-        <ol>
-          <li>Create a free UptimeRobot account and install the app</li>
-          <li>Add a <strong>New Monitor</strong> of type <strong>HTTP(s)</strong></li>
-          <li>URL: <code>https://your-app.onrender.com/api/ping</code></li>
-          <li>Interval: <strong>5 minutes</strong></li>
-        </ol>
-        <p>The <code>/api/ping</code> endpoint returns HTTP 200 when healthy and HTTP 500 if Supabase is unreachable.</p>
+        <h3>B: Monitor externo (UptimeRobot u otro)</h3>
+        <p><a href="https://uptimerobot.com" target="_blank" rel="noopener noreferrer">UptimeRobot</a> u homólogo: monitor HTTPS cada unos minutos hacia:</p>
+        <pre><code>https://TU_DOMINIO/api/ping</code></pre>
+        <p>Respuesta <strong>200</strong> si Supabase responde; <strong>500</strong> si hay error consultando la base (ver <code>src/server.js</code>).</p>
       </div>
 
       <div class="doc-section" id="testing">
-        <h2>Testing locally</h2>
-        <p>The test suite runs against your real Supabase instance, inserts test data, verifies it, and cleans up after every run. No real WhatsApp messages are sent.</p>
-        <pre><code><span class="code-comment"># Run the full suite</span>
-node test.js
-
-<span class="code-comment"># Run specific suites only</span>
-node test.js --suite formatter
-node test.js --suite formatter,memory,recurring</code></pre>
-        <p>Available suite keys: <code>connectivity</code>, <code>builddate</code>, <code>ai</code>, <code>reminders</code>, <code>routines</code>, <code>events</code>, <code>contacts</code>, <code>delete</code>, <code>interval</code>, <code>scheduler</code>, <code>usage</code>, <code>routes</code>, <code>memory</code>, <code>missingtime</code>, <code>edit</code>, <code>formatter</code>, <code>vaguedefaults</code>, <code>recurring</code>, <code>media</code>.</p>
+        <h2>Pruebas locales</h2>
+        <p><code>node test.js</code> usa tu instancia real de Supabase desde <code>.env</code>. Inserta datos de prueba y los limpia al final (ver suites en el propio archivo).</p>
+        <pre><code>node test.js
+node test.js --suite formatter,media,connectivity</code></pre>
+        <p>Claves de suite (entre otras): <code>connectivity</code>, <code>ai</code>, <code>reminders</code>, <code>scheduler</code>, <code>routes</code>, <code>media</code>, …</p>
         <div class="callout-warn callout">
-          <div class="callout-title">AI-dependent suites</div>
-          <p>Suites that call the AI waterfall (<code>ai</code>, <code>memory</code>, <code>missingtime</code>, <code>edit</code>, <code>vaguedefaults</code>, <code>recurring</code>) consume real quota and are non-deterministic. If quota is exhausted mid-run, remaining AI cases are skipped automatically. Run <code>formatter</code>, <code>media</code>, and <code>connectivity</code> for fast deterministic checks.</p>
+          <div class="callout-title">Suites que llaman a la IA</div>
+          <p>Consumen cupo real en Gemini/Groq/OpenRouter. Si se agota la cuota a mitad de carrera, el test puede saltar casos.</p>
         </div>
       </div>
 
       <!-- REFERENCE -->
       <div class="doc-section" id="ai-waterfall">
-        <h2>AI waterfall</h2>
-        <p>Every message goes through a 4-tier AI chain. If a tier is exhausted or fails, the next tier is tried automatically.</p>
+        <h2>Cadena de modelos (IA)</h2>
+        <p>Implementado en <code>src/gemini.js</code>. Orden aproximado:</p>
         <table class="doc-table">
-          <thead><tr><th>Tier</th><th>Model</th><th>Daily limit</th><th>Cost</th></tr></thead>
+          <thead><tr><th>Escalón</th><th>Proveedor / modelo</th><th>Notas</th></tr></thead>
           <tbody>
-            <tr><td>1</td><td>Gemini 3 Flash Preview</td><td>~20 req/day (shared)</td><td>Free</td></tr>
-            <tr><td>2</td><td>Gemini 2.5 Flash</td><td>~20 req/day (shared with Tier 1)</td><td>Free</td></tr>
-            <tr><td>3</td><td>Groq Llama 3.3 70B</td><td>300 req/day (safety cap)</td><td>Free</td></tr>
-            <tr><td>4</td><td>OpenRouter GPT-4o-mini</td><td>50 req/day (safety cap)</td><td>~$5 credit</td></tr>
+            <tr><td>1</td><td>Gemini <strong>2.5 Flash</strong> (JSON o texto)</td><td>Intent principal</td></tr>
+            <tr><td>2</td><td>Gemini <strong>1.5 Flash</strong></td><td>Respaldo si falla 2.5</td></tr>
+            <tr><td>3</td><td>Groq — <strong>Llama 3.3 70B</strong></td><td>Si hay <code>GROQ_API_KEY</code></td></tr>
+            <tr><td>4</td><td>OpenRouter — <strong>gpt-4o-mini</strong></td><td>Si hay <code>OPENROUTER_API_KEY</code></td></tr>
           </tbody>
         </table>
-        <p>The model name and remaining quota is appended to every bot response so you always know which tier was used. Conversation history (last 4 turns) is injected into the system prompt on every call to support follow-up questions.</p>
+        <p>Los topes diarios de seguridad en código están en <code>src/usage.js</code> (<code>LIMITS</code>: gemini 40/día combinado, groq 300, openrouter 50). El texto de respuesta puede incluir metadatos de cuota al final.</p>
+        <p>El contador de “día” para filas nuevas en <code>api_usage</code> usa fecha en zona <strong>Asia/Kolkata</strong> (<code>getTodayIST</code>): es una convención interna del panel de uso, distinta de la zona de los recordatorios (Bogotá).</p>
       </div>
 
       <div class="doc-section" id="api-endpoints">
-        <h2>API endpoints</h2>
+        <h2>Endpoints HTTP</h2>
         <table class="doc-table">
-          <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+          <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr></thead>
           <tbody>
-            <tr><td><code>GET</code></td><td><code>/</code></td><td>Landing page</td></tr>
-            <tr><td><code>GET</code></td><td><code>/documentation</code></td><td>This documentation page</td></tr>
-            <tr><td><code>GET</code></td><td><code>/status</code></td><td>Manvi — live system dashboard</td></tr>
-            <tr><td><code>GET</code></td><td><code>/api/ping</code></td><td>Keep-alive endpoint. Returns <code>{status, latency_ms, timestamp}</code></td></tr>
-            <tr><td><code>GET</code></td><td><code>/api/status</code></td><td>Dashboard data — usage stats, uptime, limits, jobs, version</td></tr>
-            <tr><td><code>GET</code></td><td><code>/webhook</code></td><td>Meta webhook verification handshake</td></tr>
-            <tr><td><code>POST</code></td><td><code>/webhook</code></td><td>Incoming WhatsApp messages — the main message handler</td></tr>
+            <tr><td><code>GET</code></td><td><code>/</code></td><td>Página principal</td></tr>
+            <tr><td><code>GET</code></td><td><code>/documentation</code></td><td>Esta documentación</td></tr>
+            <tr><td><code>GET</code></td><td><code>/status</code></td><td>Panel de sistema (HTML)</td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/ping</code></td><td>Salud: JSON <code>status</code>, <code>latency_ms</code>, <code>timestamp</code></td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/status</code></td><td>JSON: versión, uso, jobs, límites</td></tr>
+            <tr><td><code>POST</code></td><td><code>/webhook</code></td><td>Entrada Twilio (WhatsApp): campo principal <code>Body</code></td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="doc-section" id="limits">
-        <h2>Usage limits</h2>
+        <h2>Límites de uso (referencia en código)</h2>
         <table class="doc-table">
-          <thead><tr><th>Service</th><th>Limit</th><th>Reset</th></tr></thead>
+          <thead><tr><th>Servicio</th><th>Tope en <code>usage.js</code></th><th>Notas</th></tr></thead>
           <tbody>
-            <tr><td>Gemini (Tier 1 + 2 combined)</td><td>40 req/day</td><td>Midnight IST</td></tr>
-            <tr><td>Groq</td><td>300 req/day (safety cap)</td><td>Midnight UTC</td></tr>
-            <tr><td>OpenRouter</td><td>50 req/day (safety cap)</td><td>Midnight UTC</td></tr>
-            <tr><td>Tavily</td><td>1,000 req/month</td><td>Monthly</td></tr>
-            <tr><td>Serper</td><td>2,500 req lifetime</td><td>Never resets</td></tr>
+            <tr><td>Gemini (1+2)</td><td>40 solicitudes / día</td><td>Conteo combinado en tabla diaria</td></tr>
+            <tr><td>Groq</td><td>300 / día</td><td>Cap de seguridad en app</td></tr>
+            <tr><td>OpenRouter</td><td>50 / día</td><td>Cap de seguridad en app</td></tr>
+            <tr><td>Tavily</td><td>1000 / mes</td><td>Agregado en el mes calendario del bucket IST del código</td></tr>
+            <tr><td>Serper</td><td>2500 total</td><td>Lifetime en lógica de uso</td></tr>
           </tbody>
         </table>
-        <p>Manvi alerts you on WhatsApp when any search service hits 50, 10, or 0 remaining credits. Live usage is visible on the <a href="/status">status dashboard</a>.</p>
+        <p>Los cupos reales de Google/Groq/OpenRouter/Tavily/Serper dependen de tu plan en cada proveedor. El panel <a href="/status">/status</a> resume lo registrado en Supabase.</p>
       </div>
 
       <div class="doc-section" id="troubleshooting">
-        <h2>Troubleshooting</h2>
-        <h3>Server won't start — "supabaseUrl is required"</h3>
-        <p>You are running the server from inside the <code>src/</code> directory. <code>dotenv</code> looks for <code>.env</code> relative to the working directory, not the file. Always run from the project root:</p>
-        <pre><code>npm run dev       <span class="code-comment"># correct</span>
-cd src && node server.js   <span class="code-comment"># wrong — .env not found</span></code></pre>
+        <h2>Solución de problemas</h2>
+        <h3>Error al arrancar: <code>supabaseUrl is required</code></h3>
+        <p>Faltan <code>SUPABASE_URL</code> / <code>SUPABASE_KEY</code> en el entorno, o ejecutas el proceso sin cargar <code>.env</code> (por ejemplo desde otra carpeta).</p>
+        <pre><code>npm run dev   <span class="code-comment"># desde la raíz del repo</span></code></pre>
 
-        <h3>Cannot find module 'server.js'</h3>
-        <p>Your <code>package.json</code> scripts point to <code>src/server.js</code>. Don't run <code>node server.js</code> from the root — use <code>npm start</code> or <code>npm run dev</code>.</p>
+        <h3><code>PGRST204</code> — columna <code>group_name</code></h3>
+        <p>Ejecuta en Supabase <code>sql/personal_reminders_add_group_name.sql</code> y vuelve a intentar.</p>
 
-        <h3>"Contact not found in address book"</h3>
-        <p>The contact does not exist in the <code>contacts</code> table. Save them first: <em>"Save mom as 919876543210"</em></p>
+        <h3>Recordatorio no llega</h3>
+        <p>Revisa en Supabase que <code>reminder_time</code> sea <strong>anterior o igual</strong> a “ahora” cuando el cron corre (zona del servidor) y que <code>status = pending</code> hasta el envío. Mira logs <code>[reminder]</code> y que el proceso Node siga vivo (<code>PUBLIC_URL</code> / monitor). En Twilio Sandbox, el destinatario debe estar unido al sandbox; fuera de sandbox aplican las reglas de la ventana de mensajería de WhatsApp.</p>
 
-        <h3>Reminders firing on wrong date</h3>
-        <p>Make sure you specify both a date and a time. If you only specify a time, Manvi defaults to today (rolling to tomorrow if passed). For future dates, say the date explicitly.</p>
+        <h3>No hay respuesta a nota de voz</h3>
+        <p>Esperable sin STT: sin texto en <code>Body</code> el handler retorna al inicio.</p>
 
-        <h3>Dashboard shows no data</h3>
-        <p>The <code>api_usage</code> table populates as you use the bot. In v1.1.1+, a record is auto-created every day the bot is online (even if idle) to ensure your 90-day history grid remains continuous.</p>
+        <h3>Contacto no encontrado</h3>
+        <p>Guarda el contacto antes o revisa nombre/teléfono en <code>contacts</code>.</p>
       </div>
 
       <div class="doc-nav">
         <div></div>
         <a href="/status" style="text-align:right">
-          <span class="doc-nav-dir">Next</span>
-          <span class="doc-nav-title">System status →</span>
+          <span class="doc-nav-dir">Siguiente</span>
+          <span class="doc-nav-title">Estado del sistema →</span>
         </a>
       </div>
 
