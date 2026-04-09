@@ -5,19 +5,19 @@ require("dotenv").config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Tier 1: Gemini 2.5 Flash (disponible con tu API key)
+// Tier 1: Gemini 2.0 Flash
 const gemini3Json = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
+  model: "gemini-2.0-flash",
   generationConfig: { responseMimeType: "application/json" },
 });
-const gemini3Text = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const gemini3Text = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-// Tier 2: Gemini 2.5 Flash (fallback)
+// Tier 2: Gemini 1.5 Flash (fallback)
 const gemini25Json = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
+  model: "gemini-1.5-flash",
   generationConfig: { responseMimeType: "application/json" },
 });
-const gemini25Text = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const gemini25Text = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Tier 3: Groq — Llama 3.3 (free, optional)
 const groqAI = process.env.GROQ_API_KEY ? new OpenAI({
@@ -69,7 +69,7 @@ function formatForWhatsApp(text) {
 async function analyzeMessage(userMessage, isSummaryRequest = false, history = []) {
   const usageStats = await getUsage();
   const currentIST = new Date().toLocaleString("en-US", {
-    timeZone: "Asia/Kolkata",
+    timeZone: "America/Bogota",
     hour12: false,
   });
 
@@ -195,15 +195,15 @@ Use this history ONLY to understand follow-up context (e.g. "who was the captain
       const model = isSummaryRequest ? gemini3Text : gemini3Json;
       const result = await model.generateContent(promptToSend);
       googleResponseText = result.response.text();
-    } catch {
-      console.warn("[gemini] Tier 1 failed, cascading to Tier 2");
+    } catch (err1) {
+      console.warn("[gemini] Tier 1 failed:", err1.message);
       try {
         const model = isSummaryRequest ? gemini25Text : gemini25Json;
         const result = await model.generateContent(promptToSend);
         googleResponseText = result.response.text();
-        activeBrain = "Gemini 2.5 Flash";
-      } catch {
-        console.warn("[gemini] Tier 2 failed, cascading to Groq");
+        activeBrain = "Gemini 1.5 Flash";
+      } catch (err2) {
+        console.warn("[gemini] Tier 2 failed:", err2.message);
       }
     }
   }
