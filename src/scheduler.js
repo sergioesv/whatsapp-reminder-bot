@@ -101,24 +101,33 @@ cron.schedule("* * * * *", async () => {
 
     if (dueReminders?.length > 0) {
       for (const reminder of dueReminders) {
-        const sendOpts = {};
-        if (reminder.attachment_storage_path) {
-          const signed = await getSignedUrlForReminderPath(reminder.attachment_storage_path);
-          if (signed) sendOpts.mediaUrl = signed;
-          else {
-            console.warn(
-              "[scheduler] Sin URL firmada para adjunto:",
-              reminder.attachment_storage_path
-            );
+        try {
+          const sendOpts = {};
+          if (reminder.attachment_storage_path) {
+            const signed = await getSignedUrlForReminderPath(reminder.attachment_storage_path, 7200);
+            if (signed) sendOpts.mediaUrl = signed;
+            else {
+              console.warn(
+                "[scheduler] Sin URL firmada para adjunto:",
+                reminder.attachment_storage_path
+              );
+            }
           }
+          await sendWhatsAppMessage(reminder.phone, reminder.message, sendOpts);
+          const storedPath = reminder.attachment_storage_path || null;
+          await supabase
+            .from("personal_reminders")
+            .update({ status: "completed", attachment_storage_path: null })
+            .eq("id", reminder.id);
+          if (storedPath) await removeReminderAttachmentIfOrphaned(storedPath);
+        } catch (eOne) {
+          console.error(
+            "[scheduler] recordatorio",
+            reminder.id,
+            eOne.message,
+            eOne.code || eOne.status || ""
+          );
         }
-        await sendWhatsAppMessage(reminder.phone, reminder.message, sendOpts);
-        const storedPath = reminder.attachment_storage_path || null;
-        await supabase
-          .from("personal_reminders")
-          .update({ status: "completed", attachment_storage_path: null })
-          .eq("id", reminder.id);
-        if (storedPath) await removeReminderAttachmentIfOrphaned(storedPath);
       }
     }
   } catch (err) {

@@ -26,12 +26,24 @@ async function sendWhatsAppMessage(phone, message, options = {}) {
   };
 
   if (options.mediaUrl) {
-    payload.mediaUrl = Array.isArray(options.mediaUrl)
+    const urls = Array.isArray(options.mediaUrl)
       ? options.mediaUrl
       : [options.mediaUrl];
+    payload.mediaUrl = urls.filter(Boolean);
   }
 
-  await client.messages.create(payload);
+  const msg = await client.messages.create(payload);
+  if (options.mediaUrl) {
+    console.log(
+      "[twilio] mensaje saliente",
+      msg.sid,
+      "status=",
+      msg.status,
+      "numMedia=",
+      msg.numMedia
+    );
+  }
+  return msg;
 }
 
 module.exports = sendWhatsAppMessage;

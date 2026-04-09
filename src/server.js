@@ -7,6 +7,7 @@ const supabase = require("./supabase");
 const {
   uploadReminderAttachment,
   removeReminderAttachmentIfOrphaned,
+  getSignedUrlForReminderPath,
 } = require("./reminderAttachmentStorage");
 const sendWhatsAppMessage = require("./sendMessage");
 const { analyzeMessage } = require("./gemini");
@@ -735,7 +736,33 @@ app.post("/webhook", async (req, res) => {
           });
         }
 
-        return await respond(text.trim());
+        await respond(text.trim());
+
+        const seenPaths = new Set();
+        const sendReminderImage = async (r) => {
+          const p = r.attachment_storage_path;
+          if (!p || seenPaths.has(p)) return;
+          seenPaths.add(p);
+          const signed = await getSignedUrlForReminderPath(p, 7200);
+          if (!signed) {
+            console.warn("[query_reminders] no hay URL firmada para:", p);
+            return;
+          }
+          const cap = `Imagen del recordatorio: ${r.message}`;
+          try {
+            await sendWhatsAppMessage(senderPhone, cap, { mediaUrl: signed });
+          } catch (err) {
+            console.error(
+              "[query_reminders] envío imagen Twilio:",
+              err.message,
+              err.code || err.status
+            );
+          }
+        };
+        for (const r of oneOff) await sendReminderImage(r);
+        for (const r of interval) await sendReminderImage(r);
+
+        return;
       }
 
       if (intent === "query_routines") {
