@@ -1,3 +1,4 @@
+const MSG = require("../messages_es");
 const express = require("express");
 const path = require("path");
 const { performance } = require("perf_hooks");
