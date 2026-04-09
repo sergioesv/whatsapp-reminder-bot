@@ -2,6 +2,10 @@ require("dotenv").config();
 const cron = require("node-cron");
 const sendWhatsAppMessage = require("./sendMessage");
 const supabase = require("./supabase");
+const {
+  getSignedUrlForReminderPath,
+  removeReminderAttachmentIfOrphaned,
+} = require("./reminderAttachmentStorage");
 const { ensureRowExists } = require("./usage");
 
 // WhatsApp Template name for automated outreach
@@ -97,11 +101,24 @@ cron.schedule("* * * * *", async () => {
 
     if (dueReminders?.length > 0) {
       for (const reminder of dueReminders) {
-        await sendWhatsAppMessage(reminder.phone, reminder.message, templateOptions);
+        const sendOpts = {};
+        if (reminder.attachment_storage_path) {
+          const signed = await getSignedUrlForReminderPath(reminder.attachment_storage_path);
+          if (signed) sendOpts.mediaUrl = signed;
+          else {
+            console.warn(
+              "[scheduler] Sin URL firmada para adjunto:",
+              reminder.attachment_storage_path
+            );
+          }
+        }
+        await sendWhatsAppMessage(reminder.phone, reminder.message, sendOpts);
+        const storedPath = reminder.attachment_storage_path || null;
         await supabase
           .from("personal_reminders")
-          .update({ status: "completed" })
+          .update({ status: "completed", attachment_storage_path: null })
           .eq("id", reminder.id);
+        if (storedPath) await removeReminderAttachmentIfOrphaned(storedPath);
       }
     }
   } catch (err) {

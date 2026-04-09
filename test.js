@@ -18,6 +18,7 @@ const {
   replyNoCaptionMediaEs,
   inboundMediaLogLabel,
   fetchTwilioMediaBuffer,
+  mimeTypeForGeminiImage,
 } = require("./src/twilioMedia");
 
 // ─────────────────────────────────────────────
@@ -838,6 +839,13 @@ async function testMediaHandling() {
     ? log("pass", "inferMediaKind: image / audio / video / file")
     : log("fail", "inferMediaKind");
 
+  const jpegSniff = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
+  mimeTypeForGeminiImage("application/octet-stream", jpegSniff) === "image/jpeg" &&
+    mimeTypeForGeminiImage("image/jpg") === "image/jpeg" &&
+    mimeTypeForGeminiImage("image/svg+xml") === null
+    ? log("pass", "mimeTypeForGeminiImage (etapa 3)")
+    : log("fail", "mimeTypeForGeminiImage");
+
   const imgReply = replyNoCaptionMediaEs("image", 1);
   imgReply.includes("imagen") &&
     imgReply.includes("etapas") &&
@@ -863,41 +871,55 @@ async function testMediaHandling() {
     ? log("pass", "Respuestas de medio sin emoji")
     : log("fail", "Respuestas de medio sin emoji");
 
-  // ─── Etapa 2: fetchTwilioMediaBuffer (fetch global mockeado) ───
-  const realFetch = global.fetch;
-  global.fetch = async (url, init) => {
-    if (!init?.headers?.Authorization?.startsWith("Basic ")) {
-      return {
-        ok: false,
-        status: 401,
-        headers: { get: () => null },
-        arrayBuffer: async () => new ArrayBuffer(0),
-      };
-    }
-    const ab = new Uint8Array([10, 20, 30]).buffer;
+  // ─── Etapa 2: fetchTwilioMediaBuffer (fetch mockeado, URL host *.twilio.com) ───
+  const mediaUrlOk = "https://api.twilio.com/2010-04-01/Accounts/ACxxx/Messages/MMxxx/Media/ME_ok";
+
+  function mockTwilioFetchBody(chunks, headerOpts = {}) {
+    const { contentLength = null, contentType = "image/jpeg; charset=binary" } = headerOpts;
+    let idx = 0;
     return {
       ok: true,
       status: 200,
       headers: {
         get: (name) => {
           const n = String(name).toLowerCase();
-          if (n === "content-length") return "3";
-          if (n === "content-type") return "image/jpeg; charset=binary";
+          if (n === "content-length" && contentLength != null) return String(contentLength);
+          if (n === "content-type") return contentType;
           return null;
         },
       },
-      arrayBuffer: async () => ab,
+      body: {
+        getReader() {
+          return {
+            read() {
+              if (idx >= chunks.length) return Promise.resolve({ done: true, value: undefined });
+              const value = chunks[idx++];
+              return Promise.resolve({ done: false, value });
+            },
+            releaseLock() {},
+          };
+        },
+      },
     };
+  }
+
+  const realFetch = global.fetch;
+
+  global.fetch = async (_url, init) => {
+    if (!init?.headers?.Authorization?.startsWith("Basic ")) {
+      return { ok: false, status: 401, headers: { get: () => null } };
+    }
+    return mockTwilioFetchBody([new Uint8Array([10, 20, 30])], { contentLength: "3" });
   };
 
   try {
-    const r = await fetchTwilioMediaBuffer("https://api.twilio.com/x", {
+    const r = await fetchTwilioMediaBuffer(mediaUrlOk, {
       accountSid: "AC_test",
       authToken: "secret",
       fallbackContentType: "image/png",
     });
     r.buffer.length === 3 && r.contentType === "image/jpeg"
-      ? log("pass", "fetchTwilioMediaBuffer: éxito (mock)")
+      ? log("pass", "fetchTwilioMediaBuffer: éxito streaming (mock)")
       : log("fail", "fetchTwilioMediaBuffer: mock", `${r.buffer?.length} ${r.contentType}`);
   } catch (e) {
     log("fail", "fetchTwilioMediaBuffer: mock lanzó", e.message);
@@ -905,14 +927,34 @@ async function testMediaHandling() {
     global.fetch = realFetch;
   }
 
+  try {
+    await fetchTwilioMediaBuffer("https://evil.example.com/x", {
+      accountSid: "AC",
+      authToken: "t",
+    });
+    log("fail", "fetchTwilioMediaBuffer: debía rechazar host no Twilio");
+  } catch (e) {
+    e.message === "TWILIO_MEDIA_BAD_HOST"
+      ? log("pass", "fetchTwilioMediaBuffer: solo *.twilio.com")
+      : log("fail", "fetchTwilioMediaBuffer: BAD_HOST", e.message);
+  }
+
+  try {
+    await fetchTwilioMediaBuffer("http://api.twilio.com/x", { accountSid: "AC", authToken: "t" });
+    log("fail", "fetchTwilioMediaBuffer: debía exigir HTTPS");
+  } catch (e) {
+    e.message === "TWILIO_MEDIA_BAD_URL"
+      ? log("pass", "fetchTwilioMediaBuffer: solo HTTPS")
+      : log("fail", "fetchTwilioMediaBuffer: HTTPS", e.message);
+  }
+
   global.fetch = async () => ({
     ok: false,
     status: 404,
     headers: { get: () => null },
-    arrayBuffer: async () => new ArrayBuffer(0),
   });
   try {
-    await fetchTwilioMediaBuffer("https://x", { accountSid: "AC", authToken: "t" });
+    await fetchTwilioMediaBuffer(mediaUrlOk, { accountSid: "AC", authToken: "t" });
     log("fail", "fetchTwilioMediaBuffer: debía fallar con HTTP 404");
   } catch (e) {
     e.message === "TWILIO_MEDIA_HTTP_404"
@@ -929,10 +971,14 @@ async function testMediaHandling() {
       get: (name) =>
         String(name).toLowerCase() === "content-length" ? "999999999" : null,
     },
-    arrayBuffer: async () => new ArrayBuffer(0),
+    body: {
+      getReader() {
+        return { read: () => Promise.resolve({ done: true, value: undefined }), releaseLock() {} };
+      },
+    },
   });
   try {
-    await fetchTwilioMediaBuffer("https://x", {
+    await fetchTwilioMediaBuffer(mediaUrlOk, {
       accountSid: "AC",
       authToken: "t",
       maxBytes: 1000,
@@ -946,8 +992,27 @@ async function testMediaHandling() {
     global.fetch = realFetch;
   }
 
+  global.fetch = async () =>
+    mockTwilioFetchBody([new Uint8Array([1, 2, 3]), new Uint8Array(10)], {
+      contentLength: null,
+    });
   try {
-    await fetchTwilioMediaBuffer("https://x", { accountSid: "", authToken: "t" });
+    await fetchTwilioMediaBuffer(mediaUrlOk, {
+      accountSid: "AC",
+      authToken: "t",
+      maxBytes: 5,
+    });
+    log("fail", "fetchTwilioMediaBuffer: debía cortar por tamaño al leer");
+  } catch (e) {
+    e.message === "TWILIO_MEDIA_TOO_LARGE"
+      ? log("pass", "fetchTwilioMediaBuffer: límite durante streaming")
+      : log("fail", "fetchTwilioMediaBuffer: stream", e.message);
+  } finally {
+    global.fetch = realFetch;
+  }
+
+  try {
+    await fetchTwilioMediaBuffer(mediaUrlOk, { accountSid: "", authToken: "t" });
     log("fail", "fetchTwilioMediaBuffer: debía exigir credenciales");
   } catch (e) {
     e.message === "TWILIO_MEDIA_MISSING_CREDS"

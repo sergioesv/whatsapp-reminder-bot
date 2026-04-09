@@ -9,6 +9,47 @@ const MAX_MEDIA_ITEMS = 10;
 /** Tamaño máximo por archivo descargado (WhatsApp suele enviar menos). */
 const DEFAULT_MAX_MEDIA_BYTES = 15 * 1024 * 1024;
 
+/** Tope para enviar imagen inline a Gemini (evita rechazos y payloads enormes). */
+const MAX_GEMINI_INLINE_IMAGE_BYTES = 7 * 1024 * 1024;
+
+function sniffImageMimeFromBuffer(buf) {
+  if (!buf || buf.length < 3) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  if (buf.length >= 4 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+    return "image/png";
+  }
+  if (
+    buf.length >= 4 &&
+    buf[0] === 0x47 &&
+    buf[1] === 0x49 &&
+    buf[2] === 0x46 &&
+    buf[3] === 0x38
+  ) {
+    return "image/gif";
+  }
+  if (
+    buf.length >= 12 &&
+    buf.slice(0, 4).toString("ascii") === "RIFF" &&
+    buf.slice(8, 12).toString("ascii") === "WEBP"
+  )
+    return "image/webp";
+  return null;
+}
+
+/**
+ * MIME para inlineData de Gemini (JPEG/PNG/WebP/GIF). Si el header es genérico, intenta sniff del buffer.
+ * @returns {string|null}
+ */
+function mimeTypeForGeminiImage(contentType, buffer = null) {
+  const c = String(contentType || "").split(";")[0].trim().toLowerCase();
+  if (c === "image/jpg") return "image/jpeg";
+  if (c.startsWith("image/")) {
+    if (c === "image/svg+xml") return null;
+    return c;
+  }
+  return sniffImageMimeFromBuffer(buffer);
+}
+
 /**
  * Lee NumMedia, MediaUrl{i}, MediaContentType{i} del body form-urlencoded de Twilio.
  * @returns {{ count: number, items: Array<{ url: string, contentType: string }> }}
@@ -77,6 +118,20 @@ async function fetchTwilioMediaBuffer(url, options = {}) {
     throw new Error("TWILIO_MEDIA_MISSING_CREDS");
   }
 
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    throw new Error("TWILIO_MEDIA_BAD_URL");
+  }
+  if (parsedUrl.protocol !== "https:") {
+    throw new Error("TWILIO_MEDIA_BAD_URL");
+  }
+  const host = parsedUrl.hostname.toLowerCase();
+  if (!host.endsWith(".twilio.com") && host !== "twilio.com") {
+    throw new Error("TWILIO_MEDIA_BAD_HOST");
+  }
+
   const auth = Buffer.from(`${accountSid}:${authToken}`, "utf8").toString("base64");
   const res = await fetch(url, {
     headers: { Authorization: `Basic ${auth}` },
@@ -89,15 +144,41 @@ async function fetchTwilioMediaBuffer(url, options = {}) {
 
   const cl = res.headers.get("content-length");
   if (cl) {
-    const n = parseInt(cl, 10);
+    const n = parseInt(String(cl).trim(), 10);
     if (Number.isFinite(n) && n > maxBytes) {
       throw new Error("TWILIO_MEDIA_TOO_LARGE");
     }
   }
 
-  const buf = Buffer.from(await res.arrayBuffer());
-  if (buf.length > maxBytes) {
-    throw new Error("TWILIO_MEDIA_TOO_LARGE");
+  if (!res.body) {
+    throw new Error("TWILIO_MEDIA_EMPTY_BODY");
+  }
+
+  const reader = res.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value || value.length === 0) continue;
+      if (total + value.length > maxBytes) {
+        throw new Error("TWILIO_MEDIA_TOO_LARGE");
+      }
+      total += value.length;
+      chunks.push(Buffer.from(value));
+    }
+  } finally {
+    try {
+      reader.releaseLock();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const buf = chunks.length === 0 ? Buffer.alloc(0) : chunks.length === 1 ? chunks[0] : Buffer.concat(chunks);
+  if (buf.length === 0) {
+    throw new Error("TWILIO_MEDIA_EMPTY_BODY");
   }
 
   const rawCt = res.headers.get("content-type");
@@ -120,6 +201,8 @@ function inboundMediaLogLabel(kind, itemCount) {
 module.exports = {
   MAX_MEDIA_ITEMS,
   DEFAULT_MAX_MEDIA_BYTES,
+  MAX_GEMINI_INLINE_IMAGE_BYTES,
+  mimeTypeForGeminiImage,
   parseTwilioInboundMedia,
   inferMediaKind,
   replyNoCaptionMediaEs,

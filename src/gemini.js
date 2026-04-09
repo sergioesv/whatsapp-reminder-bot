@@ -46,17 +46,8 @@ function formatForWhatsApp(text) {
     .trim();
 }
 
-/**
- * 4-Tier AI Waterfall Router
- */
-async function analyzeMessage(userMessage, isSummaryRequest = false, history = []) {
-  const usageStats = await getUsage();
-  const currentIST = new Date().toLocaleString("en-US", {
-    timeZone: "America/Bogota",
-    hour12: false,
-  });
-
-const systemPrompt = `
+function buildIntentJsonPrompt(userMessage, currentIST, multimodalHint) {
+  return `
 Eres el cerebro de un asistente personal de WhatsApp llamado CERO.
 Tu dueño es Sergio. Estás hablando con él por WhatsApp.
 
@@ -67,6 +58,7 @@ CONTEXTO:
 La fecha y hora actual es: ${currentIST} (hora Colombia).
 Si el usuario dice "en 5 minutos", calcula la hora exacta en formato HH:MM:SS.
 
+${multimodalHint || ""}
 Tu trabajo es analizar el mensaje del usuario y devolver SOLO un JSON válido.
 NO escribas texto adicional. NO explicaciones. SOLO JSON.
 
@@ -80,7 +72,7 @@ REGLAS DE INTENCIÓN:
 - "save_contact": cuando quiere GUARDAR / AGREGAR un contacto en la agenda (nombre + teléfono).
   → "taskOrMessage": SOLO el nombre de la persona (sin número de teléfono).
   → "phone": el número completo con código de país, en dígitos (ej. "573001234567") o con + para que se normalice.
-  Frases típicas: "guarda a María con el 300…", "agrega contacto Luis 573…", "añade a Pedro +57 310…".
+  Frases típicas: "guarda a María con el 300…", "agrega contacto Luis 573…", "añade a Pedro +57 310…". Si la imagen muestra nombre y número, extráelos igual.
 - "query_contacts": listar agenda O preguntar el teléfono de alguien.
   → Si pide el número de UNA persona ("¿el número de Juan?", "dame el teléfono de Ana"): intent "query_contacts", "targetName": "Juan" / "Ana" (solo el nombre).
   → Si pide todos los contactos / la agenda: intent "query_contacts", "targetName": "you".
@@ -97,8 +89,8 @@ TIEMPOS VAGOS:
 
 CAMPO "date" (MUY IMPORTANTE para intent "reminder" y "edit_task"):
 - Usa "date": null (o omite la clave) cuando el usuario SOLO dice la hora o "en X minutos/horas" SIN nombrar un día del calendario.
-- SOLO rellena "date" con "YYYY-MM-DD" si el usuario dijo algo como: hoy, mañana, un día de la semana, "el 5 de agosto", "15/04", etc.
-- NUNCA inventes una fecha lejana ni adivines el mes si el usuario no lo dijo. Si solo hay hora, date = null y la hora debe ser la de HOY en Colombia (o mañana si ya pasó).
+- SOLO rellena "date" con "YYYY-MM-DD" si el usuario dijo algo como: hoy, mañana, un día de la semana, "el 5 de agosto", "15/04", etc., O si esa fecha aparece claramente en una imagen.
+- NUNCA inventes una fecha lejana ni adivines el mes si el usuario no lo dijo (ni aparece en la imagen). Si solo hay hora, date = null y la hora debe ser la de HOY en Colombia (o mañana si ya pasó).
 
 FORMATO JSON:
 
@@ -116,9 +108,30 @@ FORMATO JSON:
   "editTarget": ""
 }
 
-
-  Message: "${userMessage}"
+Mensaje de texto del usuario (puede ir vacío si solo hay imagen): ${JSON.stringify(userMessage)}
   `;
+}
+
+/**
+ * 4-Tier AI Waterfall Router. Con imagen: solo Gemini multimodal (etapa 3).
+ * @param {object|null} imageAttachment - { buffer: Buffer, mimeType: string }
+ */
+async function analyzeMessage(userMessage, isSummaryRequest = false, history = [], imageAttachment = null) {
+  const usageStats = await getUsage();
+  const currentIST = new Date().toLocaleString("en-US", {
+    timeZone: "America/Bogota",
+    hour12: false,
+  });
+
+  const multimodalHint = imageAttachment
+    ? `
+ENTRADA MULTIMODAL
+Hay una imagen adjunta. Léela: texto manuscrito, listas, capturas, fotos de pantalla, recibos, tarjetas de contacto.
+Si no hay texto en el mensaje, basa la intención en lo que ves en la imagen. Para recordatorios, usa palabras y horas visibles en la imagen.
+`
+    : "";
+
+  const systemPrompt = buildIntentJsonPrompt(userMessage, currentIST, multimodalHint);
 
   const promptToSend = isSummaryRequest
     ? `Summarize the following search results concisely in plain text. No JSON, no markdown:\n\n${userMessage}`
@@ -134,20 +147,98 @@ FORMATO JSON:
     { role: "user", content: userMessage },
   ];
 
-  // --- TIER 1 & 2: GOOGLE GEMINI ---
+  // --- Solo Gemini (multimodal) si hay imagen — Groq/OpenRouter no reciben el binario aquí ---
+  if (imageAttachment && !isSummaryRequest) {
+    const { buffer, mimeType } = imageAttachment;
+    if (!buffer?.length || !mimeType) {
+      return {
+        intent: "chat",
+        targetName: "you",
+        time: null,
+        date: null,
+        taskOrMessage:
+          "No se pudo preparar la imagen para el modelo. Intenta otra foto o escribe tu mensaje.",
+        phone: "",
+        intervalMinutes: null,
+        durationHours: null,
+        dayOfWeek: null,
+        dayOfMonth: null,
+        editTarget: "",
+      };
+    }
+
+    const imagePart = {
+      inlineData: {
+        mimeType,
+        data: buffer.toString("base64"),
+      },
+    };
+
+    let googleResponseText = null;
+    let activeBrain = "Gemini 2.5 Flash";
+
+    if (usageStats.gemini < LIMITS.gemini) {
+      try {
+        const result = await gemini25Json.generateContent([systemPrompt, imagePart]);
+        googleResponseText = result.response.text();
+      } catch (err1) {
+        console.warn("[gemini] Tier 1 multimodal (2.5 Flash) failed:", err1.message);
+        try {
+          const result = await gemini15Json.generateContent([systemPrompt, imagePart]);
+          googleResponseText = result.response.text();
+          activeBrain = "Gemini 1.5 Flash";
+        } catch (err2) {
+          console.warn("[gemini] Tier 2 multimodal (1.5 Flash) failed:", err2.message);
+        }
+      }
+    }
+
+    if (googleResponseText) {
+      await track("gemini");
+      const remaining = LIMITS.gemini - (usageStats.gemini + 1);
+      const ai_meta = `${activeBrain} — ${remaining} remaining`;
+      const match = googleResponseText.match(/\{[\s\S]*\}/);
+      if (!match) {
+        console.warn("[gemini] multimodal: no JSON en la respuesta");
+      } else {
+        try {
+          const parsed = JSON.parse(match[0]);
+          parsed.ai_meta = ai_meta;
+          return parsed;
+        } catch (e) {
+          console.warn("[gemini] multimodal JSON parse:", e.message);
+        }
+      }
+    }
+
+    return {
+      intent: "chat",
+      targetName: "you",
+      time: null,
+      date: null,
+      taskOrMessage:
+        "No pude analizar la imagen (límite o error temporal). Intenta de nuevo o describe lo que necesitas en texto.",
+      phone: "",
+      intervalMinutes: null,
+      durationHours: null,
+      dayOfWeek: null,
+      dayOfMonth: null,
+      editTarget: "",
+    };
+  }
+
+  // --- TIER 1 & 2: GOOGLE GEMINI (texto) ---
   let googleResponseText = null;
   let activeBrain = "Gemini 2.5 Flash";
 
   if (usageStats.gemini < LIMITS.gemini) {
     try {
-      // Intento con Tier 1: 2.5 Flash
       const model = isSummaryRequest ? gemini25Text : gemini25Json;
       const result = await model.generateContent(promptToSend);
       googleResponseText = result.response.text();
     } catch (err1) {
       console.warn("[gemini] Tier 1 (2.5 Flash) failed:", err1.message);
       try {
-        // Intento con Tier 2: 1.5 Flash
         const model = isSummaryRequest ? gemini15Text : gemini15Json;
         const result = await model.generateContent(promptToSend);
         googleResponseText = result.response.text();

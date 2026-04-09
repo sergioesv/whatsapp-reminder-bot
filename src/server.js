@@ -4,6 +4,10 @@ const { performance } = require("perf_hooks");
 require("dotenv").config();
 
 const supabase = require("./supabase");
+const {
+  uploadReminderAttachment,
+  removeReminderAttachmentIfOrphaned,
+} = require("./reminderAttachmentStorage");
 const sendWhatsAppMessage = require("./sendMessage");
 const { analyzeMessage } = require("./gemini");
 const { searchWeb } = require("./search");
@@ -18,6 +22,8 @@ const {
   replyNoCaptionMediaEs,
   inboundMediaLogLabel,
   fetchTwilioMediaBuffer,
+  mimeTypeForGeminiImage,
+  MAX_GEMINI_INLINE_IMAGE_BYTES,
 } = require("./twilioMedia");
 const app = express();
 app.use(express.json());
@@ -141,6 +147,27 @@ function pickReminderCalendarDate(rawDate, userMessage) {
     return null;
   }
   return d;
+}
+
+/** Incluye taskOrMessage (p. ej. texto inferido desde imagen) al validar fechas remotas. */
+function messageContextForCalendarGuard(message, taskOrMessage, editTarget) {
+  return [message, taskOrMessage || "", editTarget || ""].filter(Boolean).join(" ").trim();
+}
+
+/** Etapa 4: sube imagen al bucket de recordatorios; no bloquea el recordatorio si falla. */
+async function tryUploadReminderImage(attachedImage, ownerPhone) {
+  if (!attachedImage?.buffer?.length || !attachedImage.mimeType) return null;
+  const { path, error } = await uploadReminderAttachment({
+    buffer: attachedImage.buffer,
+    mimeType: attachedImage.mimeType,
+    ownerPhone,
+  });
+  if (error || !path) {
+    console.warn("[reminder] Storage: no se guardó la imagen:", error?.message || error);
+    return null;
+  }
+  console.log("[reminder] imagen en Storage:", path);
+  return path;
 }
 
 // Formats HH:MM or HH:MM:SS to "9:00 AM"
@@ -309,36 +336,70 @@ app.post("/webhook", async (req, res) => {
     }
   }
 
-  // Adjunto(s) sin pie de texto: descarga Twilio (etapa 2); sin IA hasta etapa 3
-  if (!textIn && inboundMedia.count > 0) {
-    const first = inboundMedia.items[0];
+  const firstMedia = inboundMedia.count > 0 ? inboundMedia.items[0] : null;
+  const firstMediaKind = firstMedia ? inferMediaKind(firstMedia.contentType) : null;
+  let attachedImage = null;
+
+  if (inboundMedia.count > 0 && firstMediaKind === "image") {
     const sid = process.env.TWILIO_ACCOUNT_SID;
     const token = process.env.TWILIO_AUTH_TOKEN;
-    if (sid && token) {
+    if (sid && token && firstMedia?.url) {
       try {
-        const { buffer, contentType } = await fetchTwilioMediaBuffer(first.url, {
+        const { buffer, contentType } = await fetchTwilioMediaBuffer(firstMedia.url, {
           accountSid: sid,
           authToken: token,
-          fallbackContentType: first.contentType,
+          fallbackContentType: firstMedia.contentType,
         });
-        console.log(
-          `[twilio media] descargado ${buffer.length} bytes, tipo ${contentType}`
-        );
+        if (buffer.length > MAX_GEMINI_INLINE_IMAGE_BYTES) {
+          console.warn(
+            `[twilio media] imagen ${buffer.length} bytes supera tope Gemini (${MAX_GEMINI_INLINE_IMAGE_BYTES}); no se envía a visión`
+          );
+        } else {
+          const mime = mimeTypeForGeminiImage(contentType, buffer);
+          if (mime) {
+            attachedImage = { buffer, mimeType: mime };
+            console.log(
+              `[twilio media] listo para visión: ${buffer.length} bytes, ${mime}`
+            );
+          } else {
+            console.warn("[twilio media] tipo no usable para Gemini:", contentType);
+          }
+        }
       } catch (err) {
         console.error("[twilio media] error al descargar:", err.message || err);
       }
     } else {
-      console.warn("[twilio media] faltan TWILIO_ACCOUNT_SID o TWILIO_AUTH_TOKEN; no se descarga el adjunto");
+      console.warn("[twilio media] faltan credenciales o URL para descargar imagen");
     }
-
-    const kind = inferMediaKind(first?.contentType);
-    const reply = replyNoCaptionMediaEs(kind, inboundMedia.count);
-    const logLabel = inboundMediaLogLabel(kind, inboundMedia.count);
-    return await replyAndLog(senderPhone, senderName, logLabel, reply);
   }
 
-  const message = textIn;
+  // Solo adjunto(s), sin texto: audio/video sigue sin IA; imagen pasa a flujo completo si se descargó
+  if (!textIn && inboundMedia.count > 0) {
+    if (firstMediaKind !== "image") {
+      const reply = replyNoCaptionMediaEs(firstMediaKind, inboundMedia.count);
+      const logLabel = inboundMediaLogLabel(firstMediaKind, inboundMedia.count);
+      return await replyAndLog(senderPhone, senderName, logLabel, reply);
+    }
+    if (!attachedImage) {
+      const reply =
+        "Recibí una imagen pero no pude descargarla, el formato no es compatible con visión o pesa demasiado. Revisa Twilio / envía otra foto o escribe en texto.";
+      return await replyAndLog(senderPhone, senderName, "[Imagen sin texto]", reply);
+    }
+  }
+
+  let message = textIn;
+  if (!textIn && attachedImage) {
+    message = inboundMediaLogLabel("image", inboundMedia.count);
+  }
+
   const lowerMsg = message.toLowerCase().trim();
+
+  const aiUserText =
+    attachedImage && textIn
+      ? `${textIn}\n\n(El usuario adjuntó una imagen; úsala para interpretar mejor la solicitud.)`
+      : attachedImage && !textIn
+        ? "El usuario envió solo una imagen, sin texto. Interpreta la imagen e infiere la intención (recordatorio, datos en la foto, consulta, etc.). Rellena el JSON."
+        : textIn;
 
   // 2. USAGE DASHBOARD
   if (lowerMsg === "/limit") {
@@ -380,7 +441,7 @@ app.post("/webhook", async (req, res) => {
   }));
 
   // 5. AI INTENT ANALYSIS (with memory context)
-  const aiResult = await analyzeMessage(message, false, history);
+  const aiResult = await analyzeMessage(aiUserText, false, history, attachedImage);
   const { intent, targetName, time, date, taskOrMessage } = aiResult;
 
   const respond = async (responseText) => {
@@ -451,8 +512,17 @@ app.post("/webhook", async (req, res) => {
         .delete()
         .ilike("message", `%${cleanTask}%`)
         .select();
-      if (remData?.length > 0)
+      if (remData?.length > 0) {
+        const seen = new Set();
+        for (const row of remData) {
+          const p = row.attachment_storage_path;
+          if (p && !seen.has(p)) {
+            seen.add(p);
+            await removeReminderAttachmentIfOrphaned(p);
+          }
+        }
         return await respond(`Recordatorio eliminado: "${remData[0].message}"`);
+      }
 
       const { data: routData } = await supabase
         .from("daily_routines")
@@ -507,16 +577,20 @@ app.post("/webhook", async (req, res) => {
       }
 
       const existing = matches[0];
-      // Delete old row and insert updated one
+      const oldAttachmentPath = existing.attachment_storage_path || null;
       await supabase.from("personal_reminders").delete().eq("id", existing.id);
 
-      const newTimestamp = buildReminderDate(time, pickReminderCalendarDate(date, message));
+      const newTimestamp = buildReminderDate(
+        time,
+        pickReminderCalendarDate(date, messageContextForCalendarGuard(message, taskOrMessage, aiResult.editTarget))
+      );
       const { error: insertErr } = await supabase.from("personal_reminders").insert([{
         phone: targetPhone,
         message: existing.message,
         reminder_time: newTimestamp,
         group_name: existing.group_name,
         status: "pending",
+        ...(oldAttachmentPath ? { attachment_storage_path: oldAttachmentPath } : {}),
       }]);
 
       return await respond(
@@ -641,7 +715,8 @@ app.post("/webhook", async (req, res) => {
               timeZone: "America/Bogota", month: "short", day: "numeric",
               hour: "numeric", minute: "2-digit", hour12: true,
             });
-            text += `- [${t}] ${r.group_name ? r.group_name + ": " : ""}${r.message}\n`;
+            const imgNote = r.attachment_storage_path ? " (imagen guardada)" : "";
+            text += `- [${t}] ${r.group_name ? r.group_name + ": " : ""}${r.message}${imgNote}\n`;
           });
         }
 
@@ -853,14 +928,19 @@ app.post("/webhook", async (req, res) => {
     if (intent === "reminder") {
       if (!time) return await respond("Indica la hora del recordatorio.");
       if (!taskOrMessage || taskOrMessage.trim() === "") return await respond("Indica para qué es el recordatorio.");
-      const calendarDate = pickReminderCalendarDate(date, message);
+      const calendarDate = pickReminderCalendarDate(
+        date,
+        messageContextForCalendarGuard(message, taskOrMessage, aiResult.editTarget)
+      );
       const dbTimestamp = buildReminderDate(time, calendarDate);
+      const attachmentPath = await tryUploadReminderImage(attachedImage, targetPhone);
       const insertPayload = {
         phone: targetPhone,
         message: taskOrMessage,
         reminder_time: dbTimestamp,
         group_name: finalName.toLowerCase() === "you" ? null : finalName,
         status: "pending",
+        ...(attachmentPath ? { attachment_storage_path: attachmentPath } : {}),
       };
       console.log(
         "[reminder] IA time=%s date=%s → usado=%s | INSERT %s",
@@ -894,6 +974,8 @@ app.post("/webhook", async (req, res) => {
       const endTime = new Date(now.getTime() + durationHrs * 60 * 60 * 1000);
       const rows = [];
 
+      const intervalAttachmentPath = await tryUploadReminderImage(attachedImage, targetPhone);
+
       let next = new Date(now.getTime() + intervalMins * 60 * 1000);
       while (next <= endTime) {
         rows.push({
@@ -901,6 +983,7 @@ app.post("/webhook", async (req, res) => {
           message: task,
           reminder_time: next.toISOString(),
           group_name: "interval",
+          ...(intervalAttachmentPath ? { attachment_storage_path: intervalAttachmentPath } : {}),
         });
         next = new Date(next.getTime() + intervalMins * 60 * 1000);
       }
