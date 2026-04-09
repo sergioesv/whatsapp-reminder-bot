@@ -36,6 +36,49 @@ app.get("/status", (req, res) => {
 // HELPERS
 // ---------------------------------------------------------
 
+function digitsOnly(v) {
+  if (v == null || v === "") return "";
+  return String(v).replace(/\D/g, "");
+}
+
+/** Comparación dueño: Twilio envía p. ej. 57300…; MY_PHONE_NUMBER puede tener +, espacios o 10 dígitos locales. */
+function isSamePhoneAsOwner(senderRaw, ownerEnvRaw) {
+  const s = digitsOnly(senderRaw);
+  const o = digitsOnly(ownerEnvRaw);
+  if (!s || !o) return false;
+  if (s === o) return true;
+  if (s.length >= 10 && o.length >= 10 && s.slice(-10) === o.slice(-10)) return true;
+  return false;
+}
+
+/** Extrae el primer bloque de teléfono (≥10 dígitos) del texto del usuario. */
+function extractPhoneFromNaturalMessage(text) {
+  if (!text) return "";
+  const chunks = text.match(/\d[\d\s\-\.]{8,18}\d/g) || [];
+  for (const chunk of chunks) {
+    const d = chunk.replace(/\D/g, "");
+    if (d.length >= 10 && d.length <= 15) return d;
+  }
+  const all = text.replace(/\D/g, "");
+  if (all.length >= 10 && all.length <= 15) return all;
+  return "";
+}
+
+function cleanContactNameFromAI(taskOrMessage, userMessage) {
+  let n = (taskOrMessage || "").trim();
+  n = n.replace(/\s*\+?\d[\d\s\-\.\(\)]{7,}\d\s*$/u, "").trim();
+  n = n.replace(/^(guarda|guardar|agrega|añade|add|salva|contacto)\s+/i, "").trim();
+  n = n.replace(/^(a|al|a la)\s+/i, "").trim();
+  if (!n && userMessage) {
+    let u = userMessage.trim();
+    u = u.replace(/\s*\+?\d[\d\s\-\.\(\)]{7,}\d\s*$/u, "").trim();
+    u = u.replace(/^(guarda|guardar|agrega|añade|add|salva)\s+(contacto\s+)?/i, "").trim();
+    u = u.replace(/^(a|al|a la)\s+/i, "").trim();
+    n = u;
+  }
+  return n.trim();
+}
+
 // Converts AI-extracted HH:MM:SS to a full COT-offset ISO timestamp
 function buildReminderDate(timeString, dateString = null) {
   const now = new Date();
@@ -244,7 +287,7 @@ app.post("/webhook", async (req, res) => {
   let senderName = "Invitado";
   let isOwner = false;
 
-  if (senderPhone === process.env.MY_PHONE_NUMBER) {
+  if (isSamePhoneAsOwner(senderPhone, process.env.MY_PHONE_NUMBER)) {
     senderName = "Sergio";
     isOwner = true;
   } else {
@@ -451,21 +494,35 @@ app.post("/webhook", async (req, res) => {
     if (intent === "save_contact") {
       if (!isOwner) return await respond("Acceso denegado.");
 
-      const name = taskOrMessage?.trim();
-      const phone = aiResult.phone?.replace(/\D/g, "");
+      let phone = digitsOnly(aiResult.phone);
+      if (!phone || phone.length < 10) {
+        phone = extractPhoneFromNaturalMessage(message);
+      }
+
+      let name = cleanContactNameFromAI(taskOrMessage, message);
 
       if (!name) return await respond("Indica el nombre del contacto.");
-      if (!phone || phone.length < 10) return await respond("Indica un número válido con código de país.");
+      if (!phone || phone.length < 10) {
+        return await respond(
+          "Indica un número válido (10 dígitos mínimo, ideal con código de país 57…). Ejemplo: «Guarda a Ana 573001234567»."
+        );
+      }
 
       const { error } = await supabase
         .from("contacts")
         .upsert([{ name, phone }], { onConflict: "name" });
 
-      return await respond(
-        !error
-          ? `Contacto guardado: ${name} — ${phone}`
-          : "No se pudo guardar el contacto. Intenta de nuevo."
-      );
+      if (error) {
+        console.error("[save_contact] Supabase:", JSON.stringify(error));
+        const errStr = `${error.code || ""} ${error.message || ""} ${error.details || ""}`;
+        const rls = /row-level security|RLS|permission denied|42501|PGRST301/i.test(errStr);
+        const hint = rls
+          ? " Revisa políticas RLS en Supabase (INSERT en contacts) o usa SUPABASE_KEY con rol service_role."
+          : "";
+        return await respond(`No se pudo guardar el contacto.${hint ? ` ${hint}` : ""}`);
+      }
+
+      return await respond(`Contacto guardado: ${name} — ${phone}`);
     }
 
     if (["query_routines", "query_contacts", "query_reminders", "query_events"].includes(intent)) {

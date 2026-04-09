@@ -77,6 +77,10 @@ REGLAS DE INTENCIÓN:
 - "routine": cuando dice "todos los días" o algo repetitivo.
 - "edit_task": cuando quiere modificar algo.
 - "delete_task": cuando quiere eliminar algo.
+- "save_contact": cuando quiere GUARDAR / AGREGAR un contacto en la agenda (nombre + teléfono).
+  → "taskOrMessage": SOLO el nombre de la persona (sin número de teléfono).
+  → "phone": el número completo con código de país, en dígitos (ej. "573001234567") o con + para que se normalice.
+  Frases típicas: "guarda a María con el 300…", "agrega contacto Luis 573…", "añade a Pedro +57 310…".
 
 ⚠️ IMPORTANTE:
 Si NO hay hora en un recordatorio:
