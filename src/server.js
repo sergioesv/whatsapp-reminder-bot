@@ -508,9 +508,26 @@ app.post("/webhook", async (req, res) => {
         );
       }
 
-      const { error } = await supabase
+      // Sin depender de UNIQUE(name): muchas bases creadas a mano no tienen la restricción y fallan upsert/onConflict (42P10).
+      const { data: existingRows, error: findErr } = await supabase
         .from("contacts")
-        .upsert([{ name, phone }], { onConflict: "name" });
+        .select("id")
+        .ilike("name", name);
+
+      let error = findErr;
+      if (!error) {
+        if (existingRows?.length) {
+          if (existingRows.length > 1) {
+            console.warn("[save_contact] Hay varias filas con el mismo nombre (ilike); actualizo la primera.");
+          }
+          ({ error } = await supabase
+            .from("contacts")
+            .update({ phone, name })
+            .eq("id", existingRows[0].id));
+        } else {
+          ({ error } = await supabase.from("contacts").insert([{ name, phone }]));
+        }
+      }
 
       if (error) {
         console.error("[save_contact] Supabase:", JSON.stringify(error));

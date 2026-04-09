@@ -271,16 +271,19 @@ async function testContacts() {
   const { data: found } = await supabase.from("contacts").select("*").ilike("name", "testcontact one").single();
   found ? log("pass", "Fetch contact by name (ILIKE)") : log("fail", "Fetch contact failed");
 
-  const { error: upsertErr } = await supabase.from("contacts").upsert([{ name: "TestContact One", phone: "911111111111" }], { onConflict: "name" });
-  upsertErr ? log("fail", "Upsert contact", upsertErr.message) : log("pass", "Upsert contact");
+  const { data: ids } = await supabase.from("contacts").select("id").ilike("name", "TestContact One").limit(1);
+  const { error: updateErr } = ids?.[0]
+    ? await supabase.from("contacts").update({ phone: "911111111111" }).eq("id", ids[0].id)
+    : { error: new Error("no row") };
+  updateErr ? log("fail", "Update contact phone", updateErr.message) : log("pass", "Update contact phone");
 
   const { data: updated } = await supabase.from("contacts").select("*").ilike("name", "TestContact One");
   if (updated && updated.length === 1 && updated[0].phone === "911111111111") {
-    log("pass", "Upsert updated number — no duplicate");
+    log("pass", "Contact phone updated — single row");
   } else if (updated && updated.length > 1) {
-    log("fail", "Upsert created duplicate — " + updated.length + " rows");
+    log("fail", "Multiple contact rows — " + updated.length);
   } else {
-    log("fail", "Upsert unexpected state");
+    log("fail", "Contact update unexpected state");
   }
 
   "+91 98765 43210".replace(/\D/g, "") === "919876543210"
