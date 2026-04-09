@@ -684,13 +684,16 @@ app.post("/webhook", async (req, res) => {
       if (!time) return await respond("Please specify a time for the reminder.");
       if (!taskOrMessage || taskOrMessage.trim() === "") return await respond("Please specify what the reminder is for.");
       const dbTimestamp = buildReminderDate(time, date || null);
-      const { error } = await supabase.from("personal_reminders").insert([{
+      const insertPayload = {
         phone: targetPhone,
         message: taskOrMessage,
         reminder_time: dbTimestamp,
         group_name: finalName.toLowerCase() === "you" ? null : finalName,
         status: "pending",
-      }]);
+      };
+      console.log("[reminder] INSERT payload:", JSON.stringify(insertPayload));
+      const { error } = await supabase.from("personal_reminders").insert([insertPayload]);
+      if (error) console.error("[reminder] Supabase INSERT error:", JSON.stringify(error));
       return await respond(
         !error
           ? `Reminder set for ${formatTimeDisplay(time)}.`
