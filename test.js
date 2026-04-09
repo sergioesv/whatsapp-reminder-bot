@@ -12,6 +12,13 @@ require("dotenv").config();
 
 const { createClient } = require("@supabase/supabase-js");
 const { analyzeMessage } = require("./src/gemini");
+const {
+  parseTwilioInboundMedia,
+  inferMediaKind,
+  replyNoCaptionMediaEs,
+  inboundMediaLogLabel,
+  fetchTwilioMediaBuffer,
+} = require("./src/twilioMedia");
 
 // ─────────────────────────────────────────────
 // SETUP
@@ -789,53 +796,164 @@ async function testRecurringTasks() {
 // v1.1: MEDIA HANDLING
 // ─────────────────────────────────────────────
 
-function testMediaHandling() {
-  console.log("\n\x1b[1mMEDIA HANDLING (v1.1)\x1b[0m");
+async function testMediaHandling() {
+  console.log("\n\x1b[1mMEDIA HANDLING — Twilio webhook (etapas 1–2)\x1b[0m");
 
-  const mediaTypes = ["audio", "image", "video", "document", "sticker"];
+  const empty = parseTwilioInboundMedia({});
+  empty.count === 0 && empty.items.length === 0
+    ? log("pass", "parseTwilioInboundMedia: vacío → count 0")
+    : log("fail", "parseTwilioInboundMedia: vacío", `count=${empty.count}`);
 
-  function shouldHandleMedia(messageData) {
-    if (!messageData?.text?.body) {
-      return mediaTypes.includes(messageData?.type) ? messageData.type : null;
-    }
-    return null;
-  }
+  const oneImg = parseTwilioInboundMedia({
+    NumMedia: "1",
+    MediaUrl0: "https://api.twilio.com/.../Media/ME123",
+    MediaContentType0: "image/jpeg",
+  });
+  oneImg.count === 1 &&
+    oneImg.items[0].url.includes("ME123") &&
+    oneImg.items[0].contentType === "image/jpeg"
+    ? log("pass", "parseTwilioInboundMedia: una imagen")
+    : log("fail", "parseTwilioInboundMedia: una imagen");
 
-  const cases = [
-    { data: { type: "audio" }, expected: "audio", name: "Audio message detected" },
-    { data: { type: "image" }, expected: "image", name: "Image message detected" },
-    { data: { type: "video" }, expected: "video", name: "Video message detected" },
-    { data: { type: "document" }, expected: "document", name: "Document message detected" },
-    { data: { type: "sticker" }, expected: "sticker", name: "Sticker message detected" },
-    { data: { type: "text", text: { body: "hello" } }, expected: null, name: "Text passes through (not intercepted)" },
-    { data: { type: "reaction" }, expected: null, name: "Reaction silently dropped" },
-    { data: {}, expected: null, name: "Empty object returns null" },
-  ];
+  const two = parseTwilioInboundMedia({
+    NumMedia: "2",
+    MediaUrl0: "https://a/0",
+    MediaContentType0: "image/png",
+    MediaUrl1: "https://a/1",
+    MediaContentType1: "image/png",
+  });
+  two.count === 2
+    ? log("pass", "parseTwilioInboundMedia: dos adjuntos")
+    : log("fail", "parseTwilioInboundMedia: dos adjuntos", `count=${two.count}`);
 
-  for (const tc of cases) {
-    const result = shouldHandleMedia(tc.data);
-    result === tc.expected
-      ? log("pass", tc.name, `type="${tc.data.type}" → "${result}"`)
-      : log("fail", tc.name, `expected="${tc.expected}", got="${result}"`);
-  }
+  const missingUrl = parseTwilioInboundMedia({ NumMedia: "1" });
+  missingUrl.count === 0
+    ? log("pass", "parseTwilioInboundMedia: NumMedia sin URL → 0 items")
+    : log("fail", "parseTwilioInboundMedia: sin URL");
 
-  function getMediaReply(msgType) {
-    const typeLabel = msgType === "audio" ? "voice notes" : `${msgType}s`;
-    return `I can only read text messages right now. I cannot process ${typeLabel}. Please type your request.`;
-  }
+  inferMediaKind("image/webp") === "image" &&
+    inferMediaKind("audio/ogg") === "audio" &&
+    inferMediaKind("video/mp4") === "video" &&
+    inferMediaKind("application/pdf") === "file"
+    ? log("pass", "inferMediaKind: image / audio / video / file")
+    : log("fail", "inferMediaKind");
 
-  getMediaReply("audio").includes("voice notes")
-    ? log("pass", "Audio reply uses 'voice notes'")
-    : log("fail", "Audio reply label wrong");
+  const imgReply = replyNoCaptionMediaEs("image", 1);
+  imgReply.includes("imagen") &&
+    imgReply.includes("etapas") &&
+    !/\b(cannot|please|right now)\b/i.test(imgReply)
+    ? log("pass", "replyNoCaptionMediaEs: imagen en español")
+    : log("fail", "replyNoCaptionMediaEs: imagen", imgReply.slice(0, 80));
 
-  getMediaReply("image").includes("images")
-    ? log("pass", "Image reply uses 'images'")
-    : log("fail", "Image reply label wrong");
+  // Evitar falsos positivos: debe sonar a español (palabras típicas)
+  /recibí|proceso|texto|escribe/i.test(replyNoCaptionMediaEs("audio", 1)) &&
+    /texto|escribe/i.test(replyNoCaptionMediaEs("video", 1))
+    ? log("pass", "replyNoCaptionMediaEs: audio y video en español")
+    : log("fail", "replyNoCaptionMediaEs: audio/video");
+
+  inboundMediaLogLabel("image", 1) === "[Imagen sin texto]" &&
+    inboundMediaLogLabel("image", 2).includes("2")
+    ? log("pass", "inboundMediaLogLabel")
+    : log("fail", "inboundMediaLogLabel");
 
   const emojiRegex = /[\u{1F300}-\u{1FFFF}]/u;
-  !emojiRegex.test(getMediaReply("audio")) && !emojiRegex.test(getMediaReply("image"))
-    ? log("pass", "Media replies contain no emojis")
-    : log("fail", "Media replies contain emojis — violates no-emoji rule");
+  const kinds = ["image", "audio", "video", "file"];
+  const allNoEmoji = kinds.every((k) => !emojiRegex.test(replyNoCaptionMediaEs(k, 1)));
+  allNoEmoji
+    ? log("pass", "Respuestas de medio sin emoji")
+    : log("fail", "Respuestas de medio sin emoji");
+
+  // ─── Etapa 2: fetchTwilioMediaBuffer (fetch global mockeado) ───
+  const realFetch = global.fetch;
+  global.fetch = async (url, init) => {
+    if (!init?.headers?.Authorization?.startsWith("Basic ")) {
+      return {
+        ok: false,
+        status: 401,
+        headers: { get: () => null },
+        arrayBuffer: async () => new ArrayBuffer(0),
+      };
+    }
+    const ab = new Uint8Array([10, 20, 30]).buffer;
+    return {
+      ok: true,
+      status: 200,
+      headers: {
+        get: (name) => {
+          const n = String(name).toLowerCase();
+          if (n === "content-length") return "3";
+          if (n === "content-type") return "image/jpeg; charset=binary";
+          return null;
+        },
+      },
+      arrayBuffer: async () => ab,
+    };
+  };
+
+  try {
+    const r = await fetchTwilioMediaBuffer("https://api.twilio.com/x", {
+      accountSid: "AC_test",
+      authToken: "secret",
+      fallbackContentType: "image/png",
+    });
+    r.buffer.length === 3 && r.contentType === "image/jpeg"
+      ? log("pass", "fetchTwilioMediaBuffer: éxito (mock)")
+      : log("fail", "fetchTwilioMediaBuffer: mock", `${r.buffer?.length} ${r.contentType}`);
+  } catch (e) {
+    log("fail", "fetchTwilioMediaBuffer: mock lanzó", e.message);
+  } finally {
+    global.fetch = realFetch;
+  }
+
+  global.fetch = async () => ({
+    ok: false,
+    status: 404,
+    headers: { get: () => null },
+    arrayBuffer: async () => new ArrayBuffer(0),
+  });
+  try {
+    await fetchTwilioMediaBuffer("https://x", { accountSid: "AC", authToken: "t" });
+    log("fail", "fetchTwilioMediaBuffer: debía fallar con HTTP 404");
+  } catch (e) {
+    e.message === "TWILIO_MEDIA_HTTP_404"
+      ? log("pass", "fetchTwilioMediaBuffer: error HTTP")
+      : log("fail", "fetchTwilioMediaBuffer: HTTP", e.message);
+  } finally {
+    global.fetch = realFetch;
+  }
+
+  global.fetch = async () => ({
+    ok: true,
+    status: 200,
+    headers: {
+      get: (name) =>
+        String(name).toLowerCase() === "content-length" ? "999999999" : null,
+    },
+    arrayBuffer: async () => new ArrayBuffer(0),
+  });
+  try {
+    await fetchTwilioMediaBuffer("https://x", {
+      accountSid: "AC",
+      authToken: "t",
+      maxBytes: 1000,
+    });
+    log("fail", "fetchTwilioMediaBuffer: debía rechazar Content-Length");
+  } catch (e) {
+    e.message === "TWILIO_MEDIA_TOO_LARGE"
+      ? log("pass", "fetchTwilioMediaBuffer: límite por Content-Length")
+      : log("fail", "fetchTwilioMediaBuffer: tamaño", e.message);
+  } finally {
+    global.fetch = realFetch;
+  }
+
+  try {
+    await fetchTwilioMediaBuffer("https://x", { accountSid: "", authToken: "t" });
+    log("fail", "fetchTwilioMediaBuffer: debía exigir credenciales");
+  } catch (e) {
+    e.message === "TWILIO_MEDIA_MISSING_CREDS"
+      ? log("pass", "fetchTwilioMediaBuffer: credenciales obligatorias")
+      : log("fail", "fetchTwilioMediaBuffer: creds", e.message);
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -877,7 +995,7 @@ const SUITES = {
   formatter: { fn: testWhatsAppFormatter, async: false },
   vaguedefaults: { fn: testVagueTimeDefaults, async: true },
   recurring: { fn: testRecurringTasks, async: true },
-  media: { fn: testMediaHandling, async: false },
+  media: { fn: testMediaHandling, async: true },
 };
 
 async function main() {

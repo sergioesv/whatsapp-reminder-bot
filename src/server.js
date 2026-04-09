@@ -12,6 +12,13 @@ const { version } = require("../package.json");
 const { getHeartbeats } = require("./scheduler");
 
 const twilio = require("twilio");
+const {
+  parseTwilioInboundMedia,
+  inferMediaKind,
+  replyNoCaptionMediaEs,
+  inboundMediaLogLabel,
+  fetchTwilioMediaBuffer,
+} = require("./twilioMedia");
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded data
@@ -273,15 +280,16 @@ app.post("/webhook", async (req, res) => {
 
   res.sendStatus(200);
 
-  // Twilio sends: Body, From, To
-  const message = req.body.Body;
+  // Twilio: Body, From, NumMedia, MediaUrl0, MediaContentType0, ...
   const rawFrom = req.body.From; // e.g. "whatsapp:+573001234567"
+  const textIn = (req.body.Body || "").trim();
+  const inboundMedia = parseTwilioInboundMedia(req.body);
 
-  if (!message || !rawFrom) return;
+  if (!rawFrom) return;
+  if (!textIn && inboundMedia.count === 0) return;
 
   // Strip "whatsapp:+" prefix to normalize phone number
   const senderPhone = rawFrom.replace("whatsapp:+", "").replace("whatsapp:", "");
-  const lowerMsg = message.toLowerCase().trim();
 
   // 1. CALLER ID
   let senderName = "Invitado";
@@ -300,6 +308,37 @@ app.post("/webhook", async (req, res) => {
       senderName = contact.name.charAt(0).toUpperCase() + contact.name.slice(1);
     }
   }
+
+  // Adjunto(s) sin pie de texto: descarga Twilio (etapa 2); sin IA hasta etapa 3
+  if (!textIn && inboundMedia.count > 0) {
+    const first = inboundMedia.items[0];
+    const sid = process.env.TWILIO_ACCOUNT_SID;
+    const token = process.env.TWILIO_AUTH_TOKEN;
+    if (sid && token) {
+      try {
+        const { buffer, contentType } = await fetchTwilioMediaBuffer(first.url, {
+          accountSid: sid,
+          authToken: token,
+          fallbackContentType: first.contentType,
+        });
+        console.log(
+          `[twilio media] descargado ${buffer.length} bytes, tipo ${contentType}`
+        );
+      } catch (err) {
+        console.error("[twilio media] error al descargar:", err.message || err);
+      }
+    } else {
+      console.warn("[twilio media] faltan TWILIO_ACCOUNT_SID o TWILIO_AUTH_TOKEN; no se descarga el adjunto");
+    }
+
+    const kind = inferMediaKind(first?.contentType);
+    const reply = replyNoCaptionMediaEs(kind, inboundMedia.count);
+    const logLabel = inboundMediaLogLabel(kind, inboundMedia.count);
+    return await replyAndLog(senderPhone, senderName, logLabel, reply);
+  }
+
+  const message = textIn;
+  const lowerMsg = message.toLowerCase().trim();
 
   // 2. USAGE DASHBOARD
   if (lowerMsg === "/limit") {
