@@ -65,6 +65,34 @@ function buildReminderDate(timeString, dateString = null) {
   return reminderDate.toISOString();
 }
 
+// Evita que la IA asigne una fecha YYYY-MM-DD lejana sin que el usuario haya mencionado fecha.
+function pickReminderCalendarDate(rawDate, userMessage) {
+  const d = rawDate != null && rawDate !== "" ? String(rawDate).trim() : "";
+  if (!d || /^null$/i.test(d)) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+  const bogus = new Date(`${d}T12:00:00-05:00`);
+  if (Number.isNaN(bogus.getTime())) return null;
+
+  const msg = (userMessage || "").toLowerCase();
+  const explicitDate =
+    /\b(hoy|mañana|pasado\s*mañana)\b/i.test(msg) ||
+    /\b(lunes|martes|mi[ée]rcoles|jueves|viernes|s[áa]bado|domingo)\b/i.test(msg) ||
+    /\b\d{1,2}\s+de\s+\w+/i.test(msg) ||
+    /\b\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?\b/.test(msg) ||
+    /\b20\d{2}-\d{2}-\d{2}\b/.test(msg) ||
+    /\b(en\s+\d+\s*(d[ií]as?|semanas?|mes(es)?))\b/i.test(msg) ||
+    /\b(pr[oó]xim[oa]s?\s+(semana|mes|año))\b/i.test(msg) ||
+    /\b(el\s+\d{1,2})\b/.test(msg);
+
+  const now = Date.now();
+  const daysAhead = (bogus.getTime() - now) / 86400000;
+  if (daysAhead > 14 && !explicitDate) {
+    console.warn("[reminder] Descartando date de la IA (sin fecha en el mensaje):", d);
+    return null;
+  }
+  return d;
+}
+
 // Formats HH:MM or HH:MM:SS to "9:00 AM"
 function formatTimeDisplay(rawTime) {
   return new Date(`1970-01-01T${rawTime}`).toLocaleTimeString("es-CO", {
@@ -404,7 +432,7 @@ app.post("/webhook", async (req, res) => {
       // Delete old row and insert updated one
       await supabase.from("personal_reminders").delete().eq("id", existing.id);
 
-      const newTimestamp = buildReminderDate(time, date || null);
+      const newTimestamp = buildReminderDate(time, pickReminderCalendarDate(date, message));
       const { error: insertErr } = await supabase.from("personal_reminders").insert([{
         phone: targetPhone,
         message: existing.message,
@@ -685,7 +713,8 @@ app.post("/webhook", async (req, res) => {
     if (intent === "reminder") {
       if (!time) return await respond("Indica la hora del recordatorio.");
       if (!taskOrMessage || taskOrMessage.trim() === "") return await respond("Indica para qué es el recordatorio.");
-      const dbTimestamp = buildReminderDate(time, date || null);
+      const calendarDate = pickReminderCalendarDate(date, message);
+      const dbTimestamp = buildReminderDate(time, calendarDate);
       const insertPayload = {
         phone: targetPhone,
         message: taskOrMessage,
@@ -693,7 +722,13 @@ app.post("/webhook", async (req, res) => {
         group_name: finalName.toLowerCase() === "you" ? null : finalName,
         status: "pending",
       };
-      console.log("[reminder] INSERT payload:", JSON.stringify(insertPayload));
+      console.log(
+        "[reminder] IA time=%s date=%s → usado=%s | INSERT %s",
+        time,
+        date ?? "(vacío)",
+        calendarDate ?? "(hoy Bogotá)",
+        JSON.stringify(insertPayload)
+      );
       const { error } = await supabase.from("personal_reminders").insert([insertPayload]);
       if (error) console.error("[reminder] Supabase INSERT error:", JSON.stringify(error));
       return await respond(

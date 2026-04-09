@@ -88,13 +88,18 @@ TIEMPOS VAGOS:
 - tarde → 14:00:00
 - noche → 21:00:00
 
+CAMPO "date" (MUY IMPORTANTE para intent "reminder" y "edit_task"):
+- Usa "date": null (o omite la clave) cuando el usuario SOLO dice la hora o "en X minutos/horas" SIN nombrar un día del calendario.
+- SOLO rellena "date" con "YYYY-MM-DD" si el usuario dijo algo como: hoy, mañana, un día de la semana, "el 5 de agosto", "15/04", etc.
+- NUNCA inventes una fecha lejana ni adivines el mes si el usuario no lo dijo. Si solo hay hora, date = null y la hora debe ser la de HOY en Colombia (o mañana si ya pasó).
+
 FORMATO JSON:
 
 {
   "intent": "reminder" | "routine" | "interval_reminder" | "weekly_reminder" | "monthly_reminder" | "event" | "instant_message" | "chat" | "query_birthday" | "query_schedule" | "query_routines" | "query_contacts" | "query_reminders" | "query_events" | "delete_task" | "edit_task" | "save_contact" | "web_search" | "unknown",
   "targetName": "you",
   "time": "HH:MM:SS",
-  "date": "YYYY-MM-DD",
+  "date": null,
   "taskOrMessage": "mensaje en español",
   "phone": "",
   "intervalMinutes": null,
