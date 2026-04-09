@@ -81,6 +81,9 @@ REGLAS DE INTENCIÓN:
   → "taskOrMessage": SOLO el nombre de la persona (sin número de teléfono).
   → "phone": el número completo con código de país, en dígitos (ej. "573001234567") o con + para que se normalice.
   Frases típicas: "guarda a María con el 300…", "agrega contacto Luis 573…", "añade a Pedro +57 310…".
+- "query_contacts": listar agenda O preguntar el teléfono de alguien.
+  → Si pide el número de UNA persona ("¿el número de Juan?", "dame el teléfono de Ana"): intent "query_contacts", "targetName": "Juan" / "Ana" (solo el nombre).
+  → Si pide todos los contactos / la agenda: intent "query_contacts", "targetName": "you".
 
 ⚠️ IMPORTANTE:
 Si NO hay hora en un recordatorio:

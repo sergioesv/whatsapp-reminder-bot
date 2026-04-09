@@ -546,11 +546,42 @@ app.post("/webhook", async (req, res) => {
       if (!isOwner) return await respond("Acceso denegado. Estos datos son privados.");
 
       if (intent === "query_contacts") {
-        const { data } = await supabase.from("contacts").select("name").order("name");
+        const named =
+          targetName && String(targetName).toLowerCase() !== "you"
+            ? String(targetName).trim()
+            : null;
+
+        if (named) {
+          const { data: matches } = await supabase
+            .from("contacts")
+            .select("name, phone")
+            .ilike("name", named);
+
+          if (!matches?.length) {
+            return await respond(`No encontré a «${named}» en la agenda.`);
+          }
+          if (matches.length > 1) {
+            return await respond(
+              `Hay varios contactos parecidos a «${named}». Prueba con el nombre completo o revisa la lista completa.`
+            );
+          }
+          const c = matches[0];
+          const label = c.name.charAt(0).toUpperCase() + c.name.slice(1);
+          const num = digitsOnly(c.phone);
+          const pretty = num ? `+${num}` : c.phone;
+          return await respond(`Número de ${label}: ${pretty}`);
+        }
+
+        const { data } = await supabase.from("contacts").select("name, phone").order("name");
         if (!data || data.length === 0) return await respond("No hay contactos guardados.");
         let text = "Agenda:\n\n";
-        data.forEach((c) => (text += `- ${c.name.charAt(0).toUpperCase() + c.name.slice(1)}\n`));
-        return await respond(text);
+        data.forEach((c) => {
+          const label = c.name.charAt(0).toUpperCase() + c.name.slice(1);
+          const num = digitsOnly(c.phone);
+          const pretty = num ? `+${num}` : c.phone;
+          text += `- ${label} — ${pretty}\n`;
+        });
+        return await respond(text.trim());
       }
 
       if (intent === "query_reminders") {
