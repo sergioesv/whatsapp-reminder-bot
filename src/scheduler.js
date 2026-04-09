@@ -8,21 +8,23 @@ const { ensureRowExists } = require("./usage");
 // This bypasses the 24-hour interaction window limit.
 const templateOptions = { templateName: "manvi_reminder" };
 
-function getISTComponents() {
+function getCOTComponents() {
   const now = new Date();
 
-  const formatter = new Intl.DateTimeFormat("en-IN", {
-    timeZone: "Asia/Kolkata",
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Bogota",
     year: "numeric",
     month: "numeric",
     day: "numeric",
   });
 
-  const [{ value: day }, , { value: month }] = formatter.formatToParts(now);
+  const parts = formatter.formatToParts(now);
+  const day = parts.find(p => p.type === "day").value;
+  const month = parts.find(p => p.type === "month").value;
 
-  // dayOfWeek in IST — 0=Sunday, 1=Monday ... 6=Saturday
+  // dayOfWeek in COT — 0=Sunday, 1=Monday ... 6=Saturday
   const dowFormatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Kolkata",
+    timeZone: "America/Bogota",
     weekday: "short",
   });
   const dowMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -32,13 +34,13 @@ function getISTComponents() {
     day: parseInt(day),
     month: parseInt(month),
     dayOfWeek: dowMap[dowStr],
-    // YYYY-MM-DD in IST — used as last_fired_date key
+    // YYYY-MM-DD in COT — used as last_fired_date key
     todayIST: new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Kolkata",
+      timeZone: "America/Bogota",
     }).format(now),
-    // HH:mm in IST — used for time comparison
+    // HH:mm in COT — used for time comparison
     timeStr: new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Asia/Kolkata",
+      timeZone: "America/Bogota",
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
@@ -117,7 +119,7 @@ cron.schedule("* * * * *", async () => {
   routineRunning = true;
 
   try {
-    const { timeStr, todayIST } = getISTComponents();
+    const { timeStr, todayIST } = getCOTComponents();
 
     const { data: routines } = await supabase
       .from("daily_routines")
@@ -146,10 +148,10 @@ cron.schedule("* * * * *", async () => {
   }
 });
 
-// CRON 3: Special event alerts — runs at 08:30 IST (03:00 UTC)
-cron.schedule("0 3 * * *", async () => {
+// CRON 3: Special event alerts — runs at 08:30 COT (13:30 UTC)
+cron.schedule("30 13 * * *", async () => {
   try {
-    const { day: todayDay, month: todayMonth } = getISTComponents();
+    const { day: todayDay, month: todayMonth } = getCOTComponents();
 
     const tomorrowDate = new Date();
     tomorrowDate.setDate(tomorrowDate.getDate() + 1);
@@ -220,7 +222,7 @@ cron.schedule("* * * * *", async () => {
   recurringRunning = true;
 
   try {
-    const { day, dayOfWeek, timeStr, todayIST } = getISTComponents();
+    const { day, dayOfWeek, timeStr, todayIST } = getCOTComponents();
 
     // Fetch all active recurring tasks not yet fired today
     const { data: tasks } = await supabase
@@ -242,7 +244,7 @@ cron.schedule("* * * * *", async () => {
       if (task.recurrence_type === "weekly") {
         shouldFire = task.day_of_week === dayOfWeek;
       } else if (task.recurrence_type === "monthly") {
-        const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+        const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
         const tomorrowIST = new Date(nowIST);
         tomorrowIST.setDate(tomorrowIST.getDate() + 1);
         const isLastDayOfMonth = tomorrowIST.getDate() === 1;

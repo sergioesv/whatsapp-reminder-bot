@@ -689,6 +689,7 @@ app.post("/webhook", async (req, res) => {
         message: taskOrMessage,
         reminder_time: dbTimestamp,
         group_name: finalName.toLowerCase() === "you" ? null : finalName,
+        status: "pending",
       }]);
       return await respond(
         !error
