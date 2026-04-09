@@ -12,12 +12,12 @@ const gemini3Json = genAI.getGenerativeModel({
 });
 const gemini3Text = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-// Tier 2: Gemini 1.5 Flash (fallback)
+// Tier 2: Gemini 1.5 Flash Latest (fallback)
 const gemini25Json = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-1.5-flash-latest",
   generationConfig: { responseMimeType: "application/json" },
 });
-const gemini25Text = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const gemini25Text = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 // Tier 3: Groq — Llama 3.3 (free, optional)
 const groqAI = process.env.GROQ_API_KEY ? new OpenAI({
