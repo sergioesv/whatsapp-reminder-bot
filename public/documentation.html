@@ -927,7 +927,7 @@ node test.js --suite formatter,media,connectivity</code></pre>
             <tr><td>4</td><td>OpenRouter — <strong>gpt-4o-mini</strong></td><td>Si hay <code>OPENROUTER_API_KEY</code></td></tr>
           </tbody>
         </table>
-        <p>Los topes diarios de seguridad en código están en <code>src/usage.js</code> (<code>LIMITS</code>: gemini 40/día combinado, groq 300, openrouter 50). El texto de respuesta puede incluir metadatos de cuota al final.</p>
+        <p>Los topes diarios de seguridad en código están en <code>src/usage.js</code> (<code>LIMITS</code>: gemini 40/día combinado, groq 300, openrouter 50). Las respuestas por WhatsApp no añaden la línea de modelo ni cupo restante.</p>
         <p>El contador de “día” para filas nuevas en <code>api_usage</code> usa fecha en zona <strong>Asia/Kolkata</strong> (<code>getTodayIST</code>): es una convención interna del panel de uso, distinta de la zona de los recordatorios (Bogotá).</p>
       </div>
 
