@@ -342,13 +342,10 @@ app.post("/webhook", async (req, res) => {
 
   // 5. AI INTENT ANALYSIS (with memory context)
   const aiResult = await analyzeMessage(message, false, history);
-  const { intent, targetName, time, date, taskOrMessage, ai_meta } = aiResult;
+  const { intent, targetName, time, date, taskOrMessage } = aiResult;
 
-  // respond() is the single exit point — appends ai_meta automatically
-  const respond = async (responseText, overrideAiMeta) => {
-    const meta = overrideAiMeta !== undefined ? overrideAiMeta : ai_meta;
-    const finalText = meta ? `${responseText}\n\n${meta}` : responseText;
-    return await replyAndLog(senderPhone, senderName, message, finalText);
+  const respond = async (responseText) => {
+    return await replyAndLog(senderPhone, senderName, message, responseText);
   };
 
   // 6. ADDRESS BOOK
@@ -401,8 +398,7 @@ app.post("/webhook", async (req, res) => {
 
       const summaryResult = await analyzeMessage(summaryPrompt, true);
       return await respond(
-        `Resultados de búsqueda (${searchResults.source})\n\n${summaryResult.text}`,
-        summaryResult.ai_meta
+        `Resultados de búsqueda (${searchResults.source})\n\n${summaryResult.text}`
       );
     }
 
